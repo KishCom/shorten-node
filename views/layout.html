@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html lang="en-US" data-domain="{{ domain }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="{{ domain }}, just another URL Shortener">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <title>{{ domain }} URL Shortening Service</title>
+    {% if devmode == "dev" %}
+    <link rel="stylesheet" type="text/css" href="/media/css/style.css">
+    <!--[if lt IE 9]><script type="text/javascript" src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script type="text/javascript" src="/media/js/ender.min.js"></script>
+    <script type="text/javascript" src="/media/js/shorten.js"></script>
+    <script type="text/javascript" src="/media/js/zeroclipboard/ZeroClipboard.js"></script>
+    {% else %}
+    <link rel="stylesheet" type="text/css" href="/media/shorten.min.css">
+    <!--[if lt IE 9]><script type="text/javascript" src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script type="text/javascript" src="/media/shorten.min.js"></script>
+    {% endif %}
+</head>
+
+<body>  
+    <header id="header"><h1>{% block title %}{% endblock %}</h1></header>
+    <div id="content">
+        {% block content %}{% endblock %}
+    </div>
+    <footer id="footer">{% block footerLink %}{% endblock %} | <a href="#" id="GetURLStats">Shortened URL Stats</a></footer>
+    <div id="Modal">
+        <input type="text" name="shortenedURL" id="shortenedURL" placeholder="http://{{ domain }}/x1y2x3">
+        <button id="getStatsSubmitBtn">Get Stats</button>
+        <div id="statsError"></div>
+        <div class="close">X</div>
+
+        <div id="getLinkResponse">
+            <a href="" id="StatsTitle" target="_blank"></a>
+            <input type="text" id="StatsOriginalURL" value="">
+            <div id="timesUsedHolder">
+                URL shortened on: <span id="dateShortened"></span><br />
+                Short URL used: <span id="timesUsed"></span> times
+            </div>
+            <div id="Statstable">
+                <table class="referrers statsList">
+                    <thead>
+                    <tr>
+                        <th>Top Referred From</th>
+                        <th class="tableCount">Count</th>
+                    </tr>
+                    </thead>
+                </table>
+                <table class="userAgents statsList">
+                    <thead>
+                    <tr>
+                        <th>Top User Agents</th>
+                        <th class="tableCount">Count</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

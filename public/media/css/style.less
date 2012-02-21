@@ -1,0 +1,188 @@
+@import "reset.css";
+@import "public/media/css/mixins.less";
+@import "public/media/css/semantic.gs.less";
+@import "fonts.css";
+
+// Specify the number of columns and set column and gutter widths
+@columns: 12;
+@column-width: 60;
+@gutter-width: 20;
+
+// Remove the definition below for a pixel-based layout
+@total-width: 100%;
+
+body, html{
+    font-family: 'PTSans-Regular', sans-serif;
+    font-size: 11px;
+    color: #444;
+    .bw-gradient(#EEE, 230, 255);
+    height: 100%;
+}
+h1{
+    font-family: 'PTSans-Bold', sans-serif;
+    font-weight: bolder;
+    margin: 50px 0 50px 0;
+    font-size: 50px;
+}
+a,a:hover,a:visited,a:active{
+    color: #444;
+}
+
+#header, #content, #footer{
+    .column(10);
+    margin: 0 auto;
+    clear: both;
+    max-width: 850px;
+    overflow: hidden;
+}
+#instructions, #response{
+    font-family:'PTSans-Regular',sans-serif;
+    font-size: 1em;
+    padding-top: 0.5em;
+    float: left;
+    clear: left;
+    width: 45%;
+    margin: 0;
+}
+#content{
+    min-height: 175px;
+}
+#response {
+    float:right;
+    text-align:right;
+    display: none;
+}
+#footer{
+    margin-top: 10em;
+    text-align: center;
+}
+#Modal{
+    display: none;
+    top: 50px;
+    width: 60em;
+    min-height: 300px;
+    border: solid 1px #444;
+    .rounded(15px);
+    .drop-shadow(0, 3px, 5px, 0.2);
+    .bw-gradient(#EEE, 255, 230);
+    text-align: center;
+    padding: 20px;
+}
+.close{
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    width: 25px;
+    height: 20px;
+    background: #000;
+    color: #FFF;
+    display: inline-block;
+    font-size: 1.5em;
+    font-weight: bolder;
+    cursor: pointer;
+    .rounded(15px);
+
+}
+::-webkit-input-placeholder {
+    color:    #999;
+}
+:-moz-placeholder {
+    color:    #999;
+}
+#originalURL, #shortenedURL{
+    font-size: 2em;
+    font-family: 'PTSans-Regular', sans-serif;
+    width: 80%;
+    height: 30px;
+    border: solid 1px #CCC;
+    margin: 10px 0 1em 0;
+}
+button{
+    font-size: 1.5em;
+    font-family: 'PTSans-Regular', sans-serif;
+    display: block;
+    width: 18%;
+    float: right;
+    height: 33px;
+    .gradient(#F5F5F5, #EEE, #FFF);
+    border: solid 1px #CCC;
+    margin: 10px 0 1em 0;
+    padding: 0;
+}
+button:hover{
+    cursor: pointer;
+    .gradient(#F5F5F5, #CCC, #FFF);
+}
+#liveCopyToClip{
+    font-size: 1em;
+    margin: 5px 0 0 0;
+    width: 30%;
+}
+#response input{ /* IE7/8 */
+    clear: both;
+    display: inline-block;
+}
+#errorMessage, #statsError{
+    font-family: 'PTSans-Bold', sans-serif;
+    font-weight: bolder;
+    font-size: 1.5em;
+    color: #FF7878;
+    float: right;
+}
+#getLinkResponse{
+    display: none;
+    text-align:left;
+}
+#getLinkResponse table{
+    width: 90%
+}
+#Statstable{
+    clear: both;
+}
+#StatsTitle, th{
+    font-family: 'PTSans-Bold', sans-serif;
+    font-weight: bolder;
+    font-size: 1.75em;
+    float: left;
+}
+#StatsOriginalURL{
+    font-family: 'PTSans-Bold', sans-serif;
+    font-size: 1.0em;
+    margin: 5px 0;
+    clear: both;
+    float: left;
+    width: 100%;
+}
+th{
+    font-size: 1.0em;
+}
+.odd{
+    background: #FFF;
+}
+.tableCount{
+    text-align: right;
+    float: right;
+    width: 5%;
+}
+table{
+    margin: 15px 0;
+}
+
+blockquote{
+    font-family: monospace;
+    font-size: 1em;
+    background: #FFF;
+    border: solid 1px #444;
+    padding: 10px;
+}
+p{
+    margin: 0 0 15px 0;
+}
+#timesUsedHolder{
+    clear: both;
+}
+/* TODO
+@media screen and (max-width: 720px) {
+   
+}
+*/

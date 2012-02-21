@@ -1,0 +1,14 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ domain }} URL Shortening{% endblock %}
+
+{% block content %}
+        <input type="text" name="originalURL" id="originalURL" placeholder="" />
+        <button id="submitBtn">Shorten URL</button>
+        <div id="errorMessage">{% if errorMessage %}{{ errorMessage }}{% endif %}</div>
+        <div id="response">{% include "setLink-response.html" %}</div>
+        <div id="instructions">Enter any link in the field above and click "Shorten". <br />
+                           You will be given a URL you can easily pass around that looks like this:<br />
+                           http://{{ domain }}/a1b2c3</div>
+{% endblock %}
+{% block footerLink %}<a href="/developers/">Developers</a>{% endblock %}

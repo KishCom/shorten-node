@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+
+{% block title %}Developer Access{% endblock %}
+{% block content %}
+
+<strong>API Acess:</strong>
+<br />
+
+<p><strong>To shorten a link</strong>:<br />
+	POST request to: http://{{ domain }}/rpc/setLink<br />
+	With a single variable "originalURL":<br />
+	<blockquote>curl -d "originalURL=http://kishcom.com" http://{{ domain }}/rpc/setLink</blockquote>
+	<br />
+	You'll get a JSON object back that looks like this:
+	<blockquote>
+	{<br />
+	"shortenError": false, //A string if there was a problem<br />
+	"alreadyShortened": true, //Did someone else shorten this URL already?<br />
+	"originalURL": "http://kishcom.com", //URL to be shortened<br />
+	"shortenedURL": "http://{{ domain }}/4w5c9g" //Full {{ domain }} shortened URL<br />
+	}<br />
+	</blockquote>
+</p>
+
+<p><strong>To get information about a link already shortened with {{ domain }}</strong>:<br />
+POST request to: http://{{ domain }}/rpc/getLink<br />
+	With a single variable "shortenedURL" with either the hash or the full URL:<br />
+	<blockquote>curl -d "shortenedURL=http://{{ domain }}/rbv28w" http://{{ domain }}/rpc/getLink</blockquote>
+	<blockquote>curl -d "shortenedURL=rbv28w" http://{{ domain }}/rpc/getLink</blockquote>
+	<br />
+	You'll get a JSON object back that looks like this:
+	<blockquote>
+	{<br />
+		"originalURL": "http://google.com", //Where the short url redirects to<br />
+		"linkHash": "rbv28w", //{{ domain }} url hash<br />
+		"timesUsed": 3, //Times this {{ domain }} url has been used<br />
+		"lastUse": 2012-02-20T10:48:26.000Z, //Last time this URL was used<br />
+		"dateShortened": 2012-02-19T02:48:26.000Z, //Date this URL was shortened<br />
+		"topReferrals":[ //Up to 10 of the top referrers<br />
+			{"referrer": "", "referrerCount": 22},<br />
+			{"referrer": "http://someurl.com/", "referrerCount": 11},<br />
+			{"referrer": "http://someotherurl.com/", "referrerCount": 8}<br />
+		],<br />
+		"topUserAgents":[ //Up to 10 of the top full user agents<br />
+			{"useragent": "Mozilla", "agentCount": 22},<br />
+			{"useragent": "IE", "agentCount": 12},<br />
+			{"useragent": "Opera", "agentCount": 1}<br />
+		],<br />
+		"error": false //Error messages will be a string instead of false<br />
+	}
+	</blockquote>
+</p>
+
+{% endblock %}
+{% block footerLink %}<a href="/">Shorten a link</a>{% endblock %}
