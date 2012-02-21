@@ -36,8 +36,10 @@ The front-end uses the django inspired templates package called swig. An asset m
 
 ## To setup for local development
 
-    # Edit "mysql.createClient" parameters in app.js with MySQL db information for your dev server (line 68 of app.js)
-    # Setup your database structure, you will be prompted for a MySQL password
+Edit settings.js to match your development and live configurations. You'll need standard MySQL creds and a domain for each.
+
+To setup the initial database structure, simply load the SQL found inside dbSetup.sql, like this (or use another admin tool):
+
     mysql -u mysqluer -p databasename < dbSetup.sql
 
 Install dependencies
