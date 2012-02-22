@@ -170,12 +170,3 @@ function mysqlDateToJavascriptDate(mytimestamp) {
     var properDate = new Date(Date.UTC(parts[0], parts[1]-1, parts[2], parts[3], parts[4], parts[5]));
     return properDate;
 }
-
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount', 'UA-6347925-2']);
-_gaq.push(['_trackPageview']);
-(function() {
-var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-})();
