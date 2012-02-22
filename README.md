@@ -12,12 +12,14 @@ Requirements:
 
 * Node.js >= 0.6.5
 * npm >= 1.0.0
-* MySQL
+* MySQL 5
 
-Making use of SO MUCH awesome stuff:
+What makes JavaScript development so awesome these days is the sheer massive amount of awesome free things out there. This web app wouldn't be possible without making use of SO MUCH awesome stuff like:
 
 * ExpressJS (http://expressjs.com/)
 * LessCSS (http://lesscss.org/)
+    - Less Elements (http://lesselements.com/)
+    - Semantic.gs (http://semantic.gs/)
 * Swig templates (http://paularmstrong.github.com/swig/)
 * EnderJS (http://ender.no.de/)
 	- jeesh (domready, bean, qwery, bonzo) https://github.com/ender-js/jeesh
@@ -29,7 +31,9 @@ Making use of SO MUCH awesome stuff:
 * express-extras (https://github.com/davglass/express-extras)
 * node-mysql (https://github.com/felixge/node-mysql)
 * ZeroClipboard (http://code.google.com/p/zeroclipboard/)
+* node-ams (https://github.com/kof/node-ams)
 
+Probably also others I'm forgetting. The glue that holds this all together is what I wrote and it's licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php).
 
 The front-end uses the django inspired templates package called swig. An asset manager build script is also included. It uses ams (https://github.com/kof/node-ams). If you plan to make front-end changes make sure to review the documentation there and edit build_assets.js as needed. There are some tests, but it is far from 100% test coverage (more like 20% coverage). Tests are written using nodeunit.
 
@@ -38,13 +42,13 @@ The front-end uses the django inspired templates package called swig. An asset m
 
 Edit settings.js to match your development and live configurations. You'll need standard MySQL creds and a domain for each.
 
-To setup the initial database structure, simply load the SQL found inside dbSetup.sql, like this (or use another admin tool):
-
-    mysql -u mysqluer -p databasename < dbSetup.sql
-
 Install dependencies
 
     npm install -d
+
+To setup the initial database structure either manually load the SQL inside of setup_db.js or simply run:
+
+    node setup_db.js dev
 
 Launch a dev server
 
@@ -87,8 +91,11 @@ Setup Heroku to be our live app environment
 
     heroku config:add NODE_ENV=live --app shortener-node
 
-Edit "mysql.createClient" parameters in app.js with MySQL db information for your live server (line 75 of app.js)
+Make sure the live_mysql portion of settings.js is correctly filled out.
 I used ClearDB MySQL Database addon from Heroku: https://addons.heroku.com/cleardb but any mysql DB that accepts remote connections will do.
+Make sure the initial database structure is setup by either manually loading the SQL inside of setup_db.js or simply running:
+
+    node setup_db.js live
 
 Make sure assets are compiled properly
 

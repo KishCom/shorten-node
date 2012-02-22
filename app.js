@@ -70,7 +70,7 @@ site.configure('live', function(){
     //Set your domain name for the shortener here
     site.set('domain', settings.live_domain);
     //Update with your live MySQL information
-    mysqlc = mysql.createClient({host: settings.dev_mysql.host, user: settings.dev_mysql.user, password: settings.dev_mysql.password, database: settings.dev_mysql.dbname});
+    mysqlc = mysql.createClient({host: settings.live_mysql.host, user: settings.live_mysql.user, password: settings.live_mysql.password, database: settings.live_mysql.dbname});
     site.set('mysqlc', mysqlc);
 });
 
