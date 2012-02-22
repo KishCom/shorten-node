@@ -61,7 +61,7 @@ site.configure('dev', function(){
     site.use(express.logger('dev'));
     console.log("Running in dev mode");
     //Update with your local mysql information
-    mysqlc = mysql.createClient({host: settings.dev_mysql.host, user: settings.dev_mysql.user, password: settings.dev_mysql.password, database: settings.dev_mysql.dbname});
+    mysqlc = mysql.createClient({host: settings.dev_mysql.host, user: settings.dev_mysql.user, password: settings.dev_mysql.password, database: settings.dev_mysql.dbname, port: settings.dev_mysql.port});
     site.set('mysqlc', mysqlc);
     site.use(express.errorHandler({ dumpExceptions: true, showStack: true}));
 });
@@ -70,7 +70,7 @@ site.configure('live', function(){
     //Set your domain name for the shortener here
     site.set('domain', settings.live_domain);
     //Update with your live MySQL information
-    mysqlc = mysql.createClient({host: settings.live_mysql.host, user: settings.live_mysql.user, password: settings.live_mysql.password, database: settings.live_mysql.dbname});
+    mysqlc = mysql.createClient({host: settings.live_mysql.host, user: settings.live_mysql.user, password: settings.live_mysql.password, database: settings.live_mysql.dbname, port: settings.live_mysql.port});
     site.set('mysqlc', mysqlc);
 });
 

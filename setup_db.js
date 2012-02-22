@@ -8,10 +8,10 @@ var devOrLive = process.argv[2];
 var mysqlc;
 
 if (devOrLive == "dev"){
-	mysqlc = mysql.createClient({host: settings.dev_mysql.host, user: settings.dev_mysql.user, password: settings.dev_mysql.password, database: settings.dev_mysql.dbname});
+	mysqlc = mysql.createClient({host: settings.dev_mysql.host, user: settings.dev_mysql.user, password: settings.dev_mysql.password, database: settings.dev_mysql.dbname, port: settings.dev_mysql.port});
 	makeDB();
 }else if(devOrLive == "live"){
-	mysqlc = mysql.createClient({host: settings.live_mysql.host, user: settings.live_mysql.user, password: settings.live_mysql.password, database: settings.live_mysql.dbname});
+	mysqlc = mysql.createClient({host: settings.live_mysql.host, user: settings.live_mysql.user, password: settings.live_mysql.password, database: settings.live_mysql.dbname, port: settings.live_mysql.port});
 	makeDB();
 }else{
 	console.log("usage: node setup_db.js dev");
