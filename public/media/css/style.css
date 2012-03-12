@@ -21,6 +21,9 @@ body, html {
   background: -ms-linear-gradient(bottom, #e6e6e6 0%, #e6e6e6 100%);
   background: -moz-linear-gradient(center bottom, #e6e6e6 0%, #ffffff 100%);
   height: 100%;
+  margin: 0;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 h1 {
   font-family: 'PTSans-Bold', sans-serif;
