@@ -11,8 +11,14 @@ var ROOT_DIR = __dirname + '/public/media',
 // Here we parse style.less into style.css - the dev server does this with middleware
 var runless = 'lessc ' + CSS_DIR + '/style.less > ' + CSS_DIR + '/style.css';
 exec(runless, function(error, stdout, stderr){
-	console.log(stdout);
-	runBuild();
+	if (error !== null || stderr !== null){
+        console.log("LESS Compile Error:");
+        console.log(stdout);
+        console.log(stderr);
+        process.exit(1);
+    }else{
+        runBuild();
+    }
 });
 
 function runBuild(){
