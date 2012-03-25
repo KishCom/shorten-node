@@ -6,9 +6,11 @@
 var express = require('express'),
     swig = require('swig'),
     Routes = require('./routes'),
-    mysql = require('mysql'),
+    mongoose = require('mongoose'),
+    Schema = mongoose.Schema,
     extras = require('express-extras'),
     settings = require('./settings').shorten_settings,
+    models = require('./settings').models,
     site = module.exports = express.createServer();
 
 //We pass Routes our entire app so it has access to the app context
@@ -27,7 +29,6 @@ site.configure(function(){
     site.set('views', __dirname + '/views');
     site.set('view engine', 'html');
     site.register('.html', require('swig'));
-    site.set('view cache', true);
     site.set('view options', {layout: false}); //For extends and block tags in swig templates
     //The rest of our static-served files
     site.use(express.static(__dirname + '/public'));
@@ -54,24 +55,26 @@ site.configure(function(){
 */
 //Dev mode
 site.configure('dev', function(){
+    site.set('view cache', false);
     //Set your domain name for your development environment
     site.set('domain', settings.dev_domain);
     //LESS compiler middleware, if style.css is requested it will automatically compile and return style.less
     site.use(express.compiler({ src: __dirname + '/public', enable: ['less']}));
     site.use(express.logger('dev'));
     console.log("Running in dev mode");
-    //Update with your local mysql information
-    mysqlc = mysql.createClient({host: settings.dev_mysql.host, user: settings.dev_mysql.user, password: settings.dev_mysql.password, database: settings.dev_mysql.dbname, port: settings.dev_mysql.port});
-    site.set('mysqlc', mysqlc);
+    mongoose.connect(settings.dev_mongodb_uri);
+    mongoose.model('LinkMaps', models.LinkMaps, 'LinkMaps'); //models is pulled in from settings.js
+    mongoose.model('LinkStats', models.LinkStats, 'LinkStats'); //models is pulled in from settings.js
+    site.set('mongoose', mongoose);
     site.use(express.errorHandler({ dumpExceptions: true, showStack: true}));
 });
 //Live deployed mode
 site.configure('live', function(){
+    site.set('view cache', true);
     //Set your domain name for the shortener here
     site.set('domain', settings.live_domain);
-    //Update with your live MySQL information
-    mysqlc = mysql.createClient({host: settings.live_mysql.host, user: settings.live_mysql.user, password: settings.live_mysql.password, database: settings.live_mysql.dbname, port: settings.live_mysql.port});
-    site.set('mysqlc', mysqlc);
+    mongoose.connect(settings.live_mongodb_uri);
+    site.set('mongoose', mongoose);
 });
 
 

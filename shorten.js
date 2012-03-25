@@ -25,8 +25,9 @@ var Shorten = function(app){
 */
 Shorten.prototype.linkHashLookUp = function(linkHash, callback){
     //console.log("Looking up linkhash: " + linkHash);
-    var mysqlc = this.app._locals.settings.mysqlc;
-    mysqlc.query("SELECT * FROM `shorten_linkmaps` WHERE `linkHash` = '" + linkHash + "' LIMIT 1", function(err, results, fields){
+    var mongoose = this.app._locals.settings.mongoose;
+    var dbCursor = mongoose.model('LinkMaps');
+    dbCursor.find({"linkHash": linkHash}, function(err, results){
         if (err === null){
             if (typeof(callback) === "function"){
                 if (results.length == 0){
@@ -38,7 +39,7 @@ Shorten.prototype.linkHashLookUp = function(linkHash, callback){
                 }
             }
         }else{
-            console.log("Some SQL error:");
+            console.log("Some DB error:");
             console.log(err);
             callback(false);
             return false;
@@ -54,19 +55,22 @@ Shorten.prototype.linkHashLookUp = function(linkHash, callback){
 */
 Shorten.prototype.addNewShortenLink = function(originalURL, callback){
     var that = this; //Grab this context for after we make a DB query
-    var mysqlc = this.app._locals.settings.mysqlc;
+    var mongoose = this.app._locals.settings.mongoose;
     
     var newHash = that.genHash(function(newHash){
-        mysqlc.query("INSERT INTO `shorten_linkmaps` (`linkDestination`, `linkHash`, `timestamp`, `id`) VALUES ('" + originalURL +"', '" + newHash + "', NOW( ), '')", function(err, results, fields){
+        var dbCursor = mongoose.model('LinkMaps');
+        dbCursor = new dbCursor({linkDestination: originalURL, linkHash: newHash});
+        dbCursor.save(function(err){
             if (err === null){
                 if (typeof(callback) === "function"){
                     //Get and return our newly created short URL
                     that.originalURLLookUp(originalURL, callback);
+                    return true;
                 }
             }else{
                 console.log(err);
+                return false;
             }
-            return results[0];
         });
     });
 };
@@ -86,8 +90,9 @@ Shorten.prototype.addNewShortenLink = function(originalURL, callback){
 *            }
 */
 Shorten.prototype.originalURLLookUp = function (originalURL, callback){
-    var mysqlc = this.app._locals.settings.mysqlc;
-    mysqlc.query("SELECT * FROM `shorten_linkmaps` WHERE `linkDestination` = '" + originalURL + "' LIMIT 1", function(err, results, fields){
+    var mongoose = this.app._locals.settings.mongoose;
+    var dbCursor = mongoose.model('LinkMaps');
+    dbCursor.find({"linkDestination": originalURL}, function(err, results){
         if (err === null){
             if (typeof(callback) === "function"){
                 if (results[0] !== undefined){
@@ -130,17 +135,20 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
     // Strip domain and slashes
     shortenedURL = shortenedURL.replace("http://" + this.app.settings.domain + "/", "");
     //console.log("Looking up stats for: " + shortenedURL);
-    var mysqlc = this.app._locals.settings.mysqlc;
+    var mongoose = this.app._locals.settings.mongoose;
+    var dbCursor = mongoose.model('LinkMaps');
     // We need the link_id, look up the shortened URL first. This is an artifact of being ported over from an ancient PHP app. Will be revised when moving databases
-    mysqlc.query("SELECT * FROM `shorten_linkmaps` WHERE `linkHash` = '" + shortenedURL + "' LIMIT 1", function(err, results, fields){
+    //mysqlc.query("SELECT * FROM `shorten_linkmaps` WHERE `linkHash` = '" + shortenedURL + "' LIMIT 1", function(err, results, fields){
+    dbCursor.find({"linkHash": shortenedURL}, function(err, results){
         if (err === null){
             if (typeof(callback) === "function"){
                 if (results[0] !== undefined){
                     shortenedURL = results[0];
-                    var link_id = results[0].id;
+                    var link_id = results[0]._id;
                     //console.log("Got id: " + link_id);
                     // Get the actual link stats
-                    mysqlc.query("SELECT * FROM `shorten_linkstats` WHERE `linkId_id` = '" + link_id + "' ORDER BY `timestamp` DESC", function(err, results, fields){
+                    var dbCursor = mongoose.model('LinkStats');
+                    dbCursor.find({"linkId": link_id}, function(err, results){
                         if (err === null){
                             if (typeof(callback) === "function"){
                                 //console.log("Got link stats (first): " + results[0]);
@@ -187,8 +195,8 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
 
 
 /*
-*  Converts MySQL Result set into JSON object for pass to user requesting stats
-*     Accepts: Mysql Result Array
+*  Converts MongoDB Result set into expected JSON object format for pass to frontend stats requests
+*     Accepts: MongoDB Result Array
 *     Returns: JSON object with stats about the URL. Looks like this
 *              {'originalURL': 'http://google.com/ig', //Shortened URL destination
 *               'linkHash': 'xxxYYY', //Shortened URL hash (http://kish.cm/xxxYYY)
@@ -209,6 +217,7 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
 */
 Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, callback){
     // Setup the object to fill in and return
+    //console.log(resultSet);
     var shortenedURLStats = {  'originalURL': shortenedURL.linkDestination,
                                'linkHash': shortenedURL.linkHash,
                                'timesUsed': resultSet.length,
@@ -286,9 +295,10 @@ Shorten.prototype.genHash = function(callback){
         newHash = newHash + digit;
     }
     
-    if (this.app !== undefined){ // Tests don't need to check the database
-        var mysqlc = this.app._locals.settings.mysqlc;
-        mysqlc.query("SELECT * FROM `shorten_linkmaps` WHERE `linkHash` = '" + newHash + "'", function(err, results, fields){
+    if (this.app !== undefined){ // Tests don't need to check the database - TODO add a new node_env variable/state: test
+        var mongoose = this.app._locals.settings.mongoose;
+        var dbCursor = mongoose.model('LinkMaps');
+        dbCursor.find({"linkHash": newHash}, function(err, results){
             if (err !== null){
                 console.log(err);
             }else{
@@ -320,18 +330,24 @@ Shorten.prototype.isValidLinkHash = function(linkHash){
 
 /*
 * Logs each URL redirection for stats tracking purposes
+* Function is fire and forget. No need for callbacks.
 *   Accepts: userInfo object that looks like this:
 *            {'ip'       : "111.222.111.222", // Ip address
 *             'userAgent': "A useragent string", // User agent
 *             'referrer' : "http://google.com/checkouttheselinks", // URL referrer
-*             'linkId'   : 42 } // ID to link that this stat is associated with
+*             'linkId'   :  ObjectId("4f6e58edaf5c268231000000") } // ID to link that this stat is associated with
 *   Returns: Boolean `true` if DB operation is successful
 */
 Shorten.prototype.logURLForward = function(userInfo){
-    var mysqlc = this.app._locals.settings.mysqlc;
-    mysqlc.query("INSERT INTO `shorten_linkstats` (`ip`, `userAgent`, `referrer`, `timestamp`, `linkId_id`, `id`) VALUES ('" + userInfo.ip + "', '" + userInfo.userAgent + "', '" + userInfo.referrer + "', NOW( ), '" + userInfo.linkId + "', '')", function(err, results, fields){
+    var mongoose = this.app._locals.settings.mongoose;
+    var dbCursor = mongoose.model('LinkStats');
+    dbCursor = new dbCursor(userInfo);
+    dbCursor.save(function(err){
         if (err !== null){
             console.log(err);
+            return false;
+        }else{
+            return true;
         }
     });
 };

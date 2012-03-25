@@ -44,7 +44,6 @@ Routes.prototype.navLink = function (req, res){
                 //We know that hash, send them!
                 //console.log("Linking user to: " + linkInfo.linkDestination);
                 res.redirect(linkInfo.linkDestination);
-
                 //Also log the url forward
                 //Gather and clean the required data
                 var ipaddress = req.connection.remoteAddress === undefined ? "0.0.0.0" : req.connection.remoteAddress;
@@ -54,7 +53,7 @@ Routes.prototype.navLink = function (req, res){
                 var userInfo = {'ip'       : sanitize(ipaddress).xss(),
                                 'userAgent': sanitize(userAgent).xss(),
                                 'referrer' : sanitize(referrer).xss(),
-                                'linkId'  : sanitize(linkInfo.id).toInt() };
+                                'linkId'  : linkInfo._id };
                 shorten.logURLForward(userInfo);
             }else{
                 linkHash = sanitize(linkHash).xss();
