@@ -20,7 +20,7 @@ var Shorten = function(app){
 *            {'originalURL': 'http://originalurldestination.com', // Link destination
 *             'linkHash': 'xxxYYY', // Kish.cm hash ( http://kish.cm/xxxYYY )
 *             'timestamp': '2012-02-19T02:48:26.000Z', // Timestamp of when this was created
-*             'id':        '3' // Database ID (Probably will be deprecated when transitioned away from MySQL)
+*             'id':        ObjectId("4f6e58edaf5c268231000000") // Database ID
 *            }
 */
 Shorten.prototype.linkHashLookUp = function(linkHash, callback){
@@ -86,7 +86,7 @@ Shorten.prototype.addNewShortenLink = function(originalURL, callback){
 *            {'originalURL': 'http://originalurldestination.com', // Link destination
 *             'linkHash': 'xxxYYY', // A lookup hash ( http://kish.cm/xxxYYY )
 *             'timestamp': '2012-02-19T02:48:26.000Z', // Timestamp of when this was created
-*             'id':        '3' // Database ID (Probably will be deprecated when transitioned away from MySQL)
+*             'id':        ObjectId("4f6e58edaf5c268231000000") // Database ID
 *            }
 */
 Shorten.prototype.originalURLLookUp = function (originalURL, callback){
@@ -114,7 +114,7 @@ Shorten.prototype.originalURLLookUp = function (originalURL, callback){
 *  Gets all stats about a given shortened URL
 *     Accepts: A URL shortened with this site URL (http://kish.cm/xxxYYY) or just a shortened hash (xxxYYY)
 *              callback (callback function to return result to)
-*     Returns: MySQL result set of logged shortened URL redirections
+*     Returns: MongoDB result set of logged shortened URL redirections
 */
 Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
     var that = this; //We need this context deep in callback hell. I feel like I'm doing something wrong...
@@ -138,7 +138,6 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
     var mongoose = this.app._locals.settings.mongoose;
     var dbCursor = mongoose.model('LinkMaps');
     // We need the link_id, look up the shortened URL first. This is an artifact of being ported over from an ancient PHP app. Will be revised when moving databases
-    //mysqlc.query("SELECT * FROM `shorten_linkmaps` WHERE `linkHash` = '" + shortenedURL + "' LIMIT 1", function(err, results, fields){
     dbCursor.find({"linkHash": shortenedURL}, function(err, results){
         if (err === null){
             if (typeof(callback) === "function"){
