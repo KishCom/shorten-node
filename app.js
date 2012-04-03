@@ -63,8 +63,7 @@ site.configure('dev', function(){
     site.use(express.logger('dev'));
     console.log("Running in dev mode");
     mongoose.connect(settings.dev_mongodb_uri);
-    mongoose.model('LinkMaps', models.LinkMaps, 'LinkMaps'); //models is pulled in from settings.js
-    mongoose.model('LinkStats', models.LinkStats, 'LinkStats'); //models is pulled in from settings.js
+    mongoose.model('LinkMaps', models.LinkMaps, 'linkmaps'); //models is pulled in from settings.json
     site.set('mongoose', mongoose);
     site.use(express.errorHandler({ dumpExceptions: true, showStack: true}));
 });

@@ -143,35 +143,22 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
             if (typeof(callback) === "function"){
                 if (results[0] !== undefined){
                     shortenedURL = results[0];
-                    var link_id = results[0]._id;
-                    //console.log("Got id: " + link_id);
-                    // Get the actual link stats
-                    var dbCursor = mongoose.model('LinkStats');
-                    dbCursor.find({"linkId": link_id}, function(err, results){
-                        if (err === null){
-                            if (typeof(callback) === "function"){
-                                //console.log("Got link stats (first): " + results[0]);
-                                if (results.length > 0){
-                                    that.convertResultsToStats(results, shortenedURL, callback);
-                                    return results[0];
-                                }else{
-                                    var shortenedURLStats = {  'originalURL': shortenedURL.linkDestination,
-                                       'linkHash': shortenedURL.linkHash,
-                                       'timesUsed': 0,
-                                       'lastUse': null,
-                                       'dateShortened': null,
-                                       'topReferrals': [],
-                                       'topUserAgents': [],
-                                       'error' : 'Shortened URL hasn\'t been used yet'
-                                   };
-                                   callback(shortenedURLStats);
-                                   return shortenedURLStats;
-                                }
-                            }
-                        }else{
-                            console.log(err);
-                        }
-                    });
+                    if (shortenedURL.linkStats.length > 0){
+                        that.convertResultsToStats(shortenedURL.linkStats, shortenedURL, callback);
+                        return shortenedURL.linkStats;
+                    }else{
+                        var shortenedURLStats = {  'originalURL': shortenedURL.linkDestination,
+                           'linkHash': shortenedURL.linkHash,
+                           'timesUsed': 0,
+                           'lastUse': null,
+                           'dateShortened': null,
+                           'topReferrals': [],
+                           'topUserAgents': [],
+                           'error' : 'Shortened URL hasn\'t been used yet'
+                       };
+                       callback(shortenedURLStats);
+                       return shortenedURLStats;
+                    }
                 }else{
                     var shortenedURLStats = {  'originalURL': null,
                                                'linkHash': shortenedURL,
@@ -216,7 +203,8 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
 */
 Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, callback){
     // Setup the object to fill in and return
-    //console.log(resultSet);
+    console.log("convertResultsToStats() fired");
+    console.log(resultSet);
     var shortenedURLStats = {  'originalURL': shortenedURL.linkDestination,
                                'linkHash': shortenedURL.linkHash,
                                'timesUsed': resultSet.length,

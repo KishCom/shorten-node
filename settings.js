@@ -7,36 +7,23 @@ exports.shorten_settings = {
 
 
 /*
-*   Schema definitions
+*   Schema definition
 */
 var Schema = require('mongoose').Schema;
+// LinkStats is an embedded-document schema of LinkMaps
+var LinkStats = new Schema();
+LinkStats.add({
+    ip: String,
+    userAgent: String,
+    referrer: String,
+    timestamp: {type: Date, default: Date.now}
+});
+
 exports.models = {
 	LinkMaps: new Schema({
 	    linkDestination: String,
 	    linkHash: String,
-	    timestamp: {type: Date, default: Date.now}
-	}),
-	LinkStats: new Schema({
-	    ip: String,
-	    userAgent: String,
-	    referrer: String,
 	    timestamp: {type: Date, default: Date.now},
-	    linkId_id: String // I get the impression this is 'relational thinking' - should this model be a ... 'sub-model' of LinkMaps?
+	    linkStats: [LinkStats]
 	})
 };
-
-/*
-// Would this work? Or be more efficient than above?
-
-LinkMaps = new Schema({
-    linkDestination: String,
-    linkHash: String,
-    timestamp: {type: Date, default: Date.now},
-    linkStats: [new Schema({
-			    ip: String,
-			    userAgent: String,
-			    referrer: String,
-			    timestamp: {type: Date, default: Date.now}
-			})]
-})
-*/
