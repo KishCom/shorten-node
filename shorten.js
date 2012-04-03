@@ -203,8 +203,6 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
 */
 Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, callback){
     // Setup the object to fill in and return
-    console.log("convertResultsToStats() fired");
-    console.log(resultSet);
     var shortenedURLStats = {  'originalURL': shortenedURL.linkDestination,
                                'linkHash': shortenedURL.linkHash,
                                'timesUsed': resultSet.length,
