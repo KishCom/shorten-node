@@ -23,7 +23,7 @@ var Shorten = function(app){
 *             'id':        ObjectId("4f6e58edaf5c268231000000") // Database ID
 *            }
 */
-Shorten.prototype.linkHashLookUp = function(linkHash, callback){
+Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
     //console.log("Looking up linkhash: " + linkHash);
     var mongoose = this.app._locals.settings.mongoose;
     var dbCursor = mongoose.model('LinkMaps');
@@ -35,6 +35,13 @@ Shorten.prototype.linkHashLookUp = function(linkHash, callback){
                     return false;
                 }else{
                     callback(results[0]);
+                    //Log the data back if we have it
+                    if (results[0].linkStats.length > 0){
+                        results[0].linkStats.push(userInfo);
+                    }else{
+                        results[0].linkStats = new Array(userInfo);
+                    }
+                    results[0].save();
                     return results[0];
                 }
             }
@@ -59,7 +66,7 @@ Shorten.prototype.addNewShortenLink = function(originalURL, callback){
     
     var newHash = that.genHash(function(newHash){
         var dbCursor = mongoose.model('LinkMaps');
-        dbCursor = new dbCursor({linkDestination: originalURL, linkHash: newHash});
+        dbCursor = new dbCursor({linkDestination: originalURL, linkHash: newHash, timestamp: new ISODate() });
         dbCursor.save(function(err){
             if (err === null){
                 if (typeof(callback) === "function"){
@@ -313,29 +320,6 @@ Shorten.prototype.isValidLinkHash = function(linkHash){
     return linkHashRegex.test(linkHash);
 };
 
-/*
-* Logs each URL redirection for stats tracking purposes
-* Function is fire and forget. No need for callbacks.
-*   Accepts: userInfo object that looks like this:
-*            {'ip'       : "111.222.111.222", // Ip address
-*             'userAgent': "A useragent string", // User agent
-*             'referrer' : "http://google.com/checkouttheselinks", // URL referrer
-*             'linkId'   :  ObjectId("4f6e58edaf5c268231000000") } // ID to link that this stat is associated with
-*   Returns: Boolean `true` if DB operation is successful
-*/
-Shorten.prototype.logURLForward = function(userInfo){
-    var mongoose = this.app._locals.settings.mongoose;
-    var dbCursor = mongoose.model('LinkStats');
-    dbCursor = new dbCursor(userInfo);
-    dbCursor.save(function(err){
-        if (err !== null){
-            console.log(err);
-            return false;
-        }else{
-            return true;
-        }
-    });
-};
 
 /*
 *   Tests if this is a URL Kish.cm will shorten or not
