@@ -14,7 +14,7 @@ Requirements:
 * npm >= 1.1.12
 * MongoDB >= 2.0.4
 
-What makes JavaScript development so awesome these days is the sheer massive amount of awesome free things out there. This web app wouldn't be possible without making use of SO MUCH awesome stuff like:
+What makes JavaScript development so awesome these days is the massive amount of awesome free things out there. This web app wouldn't be possible without making use of SO MUCH awesome stuff like:
 
 * ExpressJS (http://expressjs.com/)
 * mongoose (https://github.com/LearnBoost/mongoose)
