@@ -73,6 +73,7 @@ site.configure('live', function(){
     //Set your domain name for the shortener here
     site.set('domain', settings.live_domain);
     mongoose.connect(settings.live_mongodb_uri);
+    mongoose.model('LinkMaps', models.LinkMaps, 'linkmaps'); //models is pulled in from settings.json
     site.set('mongoose', mongoose);
 });
 
@@ -94,14 +95,6 @@ site.get('*', function(){
 site.post('*', function(){
     throw new Error('404 Totally not even found anywhere');
 });
-//Custom error handling function, setup to use our error view
-site.use(function(err, req, res, next){
-    var stackTrace = Error.captureStackTrace(this, arguments.callee);
-    var now = new Date();
-    var errorTime = now.getDate() + "/" + (now.getMonth()+1) + "/" + now.getFullYear() + " - " + now.getHours() + ":" + now.getMinutes();
-    console.log(errorTime + " :: " + req.url + " " + err );
-    res.render('error', { 'errorBlock': err, 'stackTrace': stackTrace });
-});
 
 /*
 *
@@ -109,6 +102,6 @@ site.use(function(err, req, res, next){
 *
 */
 //Forman will set the proper port for live mode, otherwise use port 8888
-var port = process.env.PORT || 8888;
+var port = process.env.PORT || 80;
 site.listen(port);
 console.log("URL Shortener listening to http://" + site.set('domain') + " on port %d in %s mode", site.address().port, site.settings.env);

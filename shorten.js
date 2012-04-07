@@ -66,7 +66,7 @@ Shorten.prototype.addNewShortenLink = function(originalURL, callback){
     
     var newHash = that.genHash(function(newHash){
         var dbCursor = mongoose.model('LinkMaps');
-        dbCursor = new dbCursor({linkDestination: originalURL, linkHash: newHash, timestamp: new ISODate() });
+        dbCursor = new dbCursor({linkDestination: originalURL, linkHash: newHash, timestamp: new Date() });
         dbCursor.save(function(err){
             if (err === null){
                 if (typeof(callback) === "function"){
