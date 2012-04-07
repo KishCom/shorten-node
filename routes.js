@@ -38,24 +38,22 @@ Routes.prototype.navLink = function (req, res){
     var linkHash = req.route.params[0];
     //Is the linkHash ONLY alphanumeric and between 6-32 characters?
     if (shorten.isValidLinkHash(linkHash)){
-        //Do we have that URL?
-        shorten.linkHashLookUp(linkHash, function(linkInfo){
+
+        //Gather and clean the data required for logging this hash
+        var ipaddress = req.connection.remoteAddress === undefined ? "0.0.0.0" : req.connection.remoteAddress;
+        var referrer = req.header('Referrer') === undefined ? "" : req.header('Referrer');
+        var userAgent = req.headers['user-agent'] === undefined ? "" : req.headers['user-agent'];
+        //Here is the actual object that we will pass to the logger
+        var userInfo = {'ip'       : sanitize(ipaddress).xss(),
+                        'userAgent': sanitize(userAgent).xss(),
+                        'referrer' : sanitize(referrer).xss() };
+
+        //Do we have that URL? If so, log it and send them
+        shorten.linkHashLookUp(linkHash, userInfo, function(linkInfo, dbCursor){
             if (linkInfo !== false){
                 //We know that hash, send them!
                 //console.log("Linking user to: " + linkInfo.linkDestination);
                 res.redirect(linkInfo.linkDestination);
-
-                //Also log the url forward
-                //Gather and clean the required data
-                var ipaddress = req.connection.remoteAddress === undefined ? "0.0.0.0" : req.connection.remoteAddress;
-                var referrer = req.header('Referrer') === undefined ? "" : req.header('Referrer');
-                var userAgent = req.headers['user-agent'] === undefined ? "" : req.headers['user-agent'];
-                //Here is the actual object that we will pass to the logger
-                var userInfo = {'ip'       : sanitize(ipaddress).xss(),
-                                'userAgent': sanitize(userAgent).xss(),
-                                'referrer' : sanitize(referrer).xss(),
-                                'linkId'  : sanitize(linkInfo.id).toInt() };
-                shorten.logURLForward(userInfo);
             }else{
                 linkHash = sanitize(linkHash).xss();
                 res.render('index', {errorMessage: 'No such link shortened with hash: \'' + linkHash + '\''});

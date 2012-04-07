@@ -59,7 +59,8 @@ $(document).ready(function(){
 
                         $("#StatsOriginalURL").val(res.originalURL);
                         $("#timesUsed").html(res.timesUsed);
-                        $("#dateShortened").html(mysqlDateToJavascriptDate(res.dateShortened));
+                        var niceDate = new Date(res.dateShortened).toLocaleString();
+                        $("#dateShortened").html(niceDate);
                         var appendMe = "";
                         if (res.topUserAgents.length > 0){
                             for (var i = 0; res.topUserAgents.length > i; i++){
@@ -162,11 +163,4 @@ function isURL(testURL) {
     }else{
         return false;
     }
-}
-
-function mysqlDateToJavascriptDate(mytimestamp) {
-    var regex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2}).000Z$/;
-    var parts = mytimestamp.replace(regex, "$1 $2 $3 $4 $5 $6").split(' ');
-    var properDate = new Date(Date.UTC(parts[0], parts[1]-1, parts[2], parts[3], parts[4], parts[5]));
-    return properDate;
 }

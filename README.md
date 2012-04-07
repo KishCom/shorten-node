@@ -2,21 +2,22 @@
     (__ |_  _ ._.-+- _ ._  ___ ._  _  _| _ 
     .__)[ )(_)[   | (/,[ )     [ )(_)(_](/,
 
-Shorten-node - A URL Shortener web app written in Node.js, with a MySQL backend.
+Shorten-node - A URL Shortener web app written in Node.js, with a MongoDB backend.
 
 The app that powers my URL shortener "kish.cm" has come to represent a kind of "Hello world" for learning new languages and frameworks. This is my node.js powered version and is the version running on http://kish.cm (current as of time of writing).
 
-I keep using MySQL only because that's what the original shortening app used when it was built in PHP almost 6 years ago. I am planning to move to a nosql style DB sometime in the future.
+I've only recently switched to MongoDB. This is my first project using MongoDB, and it is very much a learning experience. Please contact me if you see better ways of doing things, the whole point is to learn how MongoDB works.
 
 Requirements:	
 
-* Node.js >= 0.6.5
-* npm >= 1.0.0
-* MySQL 5
+* Node.js >= 0.6.14
+* npm >= 1.1.12
+* MongoDB >= 2.0.4
 
-What makes JavaScript development so awesome these days is the sheer massive amount of awesome free things out there. This web app wouldn't be possible without making use of SO MUCH awesome stuff like:
+What makes JavaScript development so awesome these days is the massive amount of awesome free things out there. This web app wouldn't be possible without making use of SO MUCH awesome stuff like:
 
 * ExpressJS (http://expressjs.com/)
+* mongoose (https://github.com/LearnBoost/mongoose)
 * LessCSS (http://lesscss.org/)
     - Less Elements (http://lesselements.com/)
     - Semantic.gs (http://semantic.gs/)
@@ -29,7 +30,6 @@ What makes JavaScript development so awesome these days is the sheer massive amo
 * node-validator (https://github.com/chriso/node-validator)
 * nodeunit (https://github.com/caolan/nodeunit)
 * express-extras (https://github.com/davglass/express-extras)
-* node-mysql (https://github.com/felixge/node-mysql)
 * ZeroClipboard (http://code.google.com/p/zeroclipboard/)
 * node-ams (https://github.com/kof/node-ams)
 
@@ -40,15 +40,11 @@ The front-end uses the django inspired templates package called swig. An asset m
 
 ## To setup for local development
 
-Edit settings.js to match your development and live configurations. You'll need standard MySQL creds and a domain for each.
+Edit settings.js to match your development and live configurations. You'll need a valid MongoDB URI and a domain for each.
 
 Install dependencies
 
     npm install -d
-
-To setup the initial database structure either manually load the SQL inside of setup_db.js or simply run:
-
-    node setup_db.js dev
 
 Launch a dev server
 
@@ -91,11 +87,8 @@ Setup Heroku to be our live app environment
 
     heroku config:add NODE_ENV=live --app shortener-node
 
-Make sure the live_mysql portion of settings.js is correctly filled out.
-I used ClearDB MySQL Database addon from Heroku: https://addons.heroku.com/cleardb but any mysql DB that accepts remote connections will do.
-Make sure the initial database structure is setup by either manually loading the SQL inside of setup_db.js or simply running:
-
-    node setup_db.js live
+Make sure the all the 'live' portions of settings.js is correctly filled out.
+I used MongoLabs addon from Heroku: https://addons.heroku.com/mongolab but any MongoDB URI should do.
 
 Make sure assets are compiled properly
 
@@ -103,10 +96,10 @@ Make sure assets are compiled properly
 
 Don't forget to commit your changes
 
-    git commit -a -m "Updated my MySQL hosts information and rebuilt assets."
+    git commit -a -m "Updated my MongoDB URIs and rebuilt assets."
 
-If you use ClearDB addon you can get the mysql info by listing the config (replace 'shortener-node' with your app name)
-You should also see: "NODE_ENV => live"
+If you use MongoLab addon you can get the proper URI info by listing the config (replace 'shortener-node' with your app name)
+You should see: "NODE_ENV => live" and "MONGOLAB_URI => mongodb://xxx:yyy@somehost.com/heroku_app00000" as part of the output of this command:
 
     heroku config --app shortener-node
 
