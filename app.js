@@ -1,6 +1,6 @@
 /*
 *   shorten-node - A URL Shortening web app
-*    Andrew Kish, Feb 2012
+*    Andrew Kish, 2012
 */
 
 var express = require('express'),
@@ -15,7 +15,6 @@ var express = require('express'),
 
 //We pass Routes our entire app so it has access to the app context
 var routes = new Routes(site);
-var mysqlc;
 
 /*
 *
@@ -65,7 +64,7 @@ site.configure('dev', function(){
     mongoose.connect(settings.dev_mongodb_uri);
     mongoose.model('LinkMaps', models.LinkMaps, 'linkmaps'); //models is pulled in from settings.json
     site.set('mongoose', mongoose);
-    site.use(express.errorHandler({ dumpExceptions: true, showStack: true}));
+    //site.use(express.errorHandler({ dumpExceptions: true, showStack: true}));
 });
 //Live deployed mode
 site.configure('live', function(){
@@ -87,13 +86,46 @@ site.get('/', routes.index);
 site.get('/developers/', routes.developers);
 site.post('/rpc/setLink', routes.setLink);
 site.post('/rpc/getLink', routes.getLink);
-site.all(/^\/([a-zA-Z0-9]{6,32})$/, routes.navLink);
-//Anything else anyone tries should be a 404, keep this last:
-site.get('*', function(){
-    throw new Error('404 Totally not even found anywhere');
+site.get(/^\/([a-zA-Z0-9]{6,32})$/, routes.navLink);
+//Catch all other attempted routes and throw them a 404!
+site.all('*', function(req, resp, next){
+    next({name: "NotFound", "message": "Oops! The page you requested doesn't exist","status": 404});
 });
-site.post('*', function(){
-    throw new Error('404 Totally not even found anywhere');
+
+site.error(function(err, req, res, next){
+    if (err.status == 404){
+        console.error(new Date().toLocaleString(), '>> 404 :', req.params[0], ' UA: ', req.headers['user-agent'], 'IP: ', req.ip);
+    }
+
+    if(!err.name || err.name == 'Error'){
+        console.error(new Date().toLocaleString(), '>>', err);
+        console.log(err.stack);
+
+        if(req.xhr){
+            return res.send({ error: 'Internal error' }, 500);
+        }else{
+            return res.render('errors/500.html', {
+                status: 500,
+                error: err,
+                showStack: site.settings.showStackError,
+                title: 'Oops! Something went wrong!',
+                devmode: req.app.settings.env,
+                domain: req.app.set('domain')
+            });
+        }
+    }
+
+    if(req.xhr)
+        return res.send({ error: err.message }, err.status);
+
+    res.render('errors/' + err.status + '.html', {
+        status: err.status,
+        error: err,
+        showStack: site.settings.showStackError,
+        title: err.message,
+        devmode: req.app.settings.env,
+        domain: req.app.set('domain')
+    });
 });
 
 /*

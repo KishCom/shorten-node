@@ -1,0 +1,5 @@
+{% extends "error.html" %}
+
+{% block error %}<h1>500 Something is wrong on our end</h1>
+<p>To have no errors<br />Would be life without meaning<br />No struggle, no joy</p>
+{% endblock %}

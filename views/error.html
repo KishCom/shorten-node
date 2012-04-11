@@ -1,5 +1,27 @@
 {% extends "layout.html" %}
 
-{% block title %}{{ errorType }} Error!{% endblock %}
-{% block content %}<strong>{{ errorBlock }}</strong>{% endblock %}
-{% block footerLink %}<a href="/">Shorten a link</a>{% endblock %}
+{% block content %}<h1>Unknown Error!</h1>
+<p>To have no errors<br />Would be life without meaning<br />No struggle, no joy</p>
+
+{% if devmode == "dev" %}
+<p><strong>Error:</strong> {{ error }}
+<script type="text/javascript">
+if(typeof(console) !== 'undefined' && console !== null) {
+	console.error({{ error }});
+}
+</script>
+</p>
+<p><strong>Status:</strong> {{ status }}</p>
+<p><strong>Title:</strong> {{ err.message }}</p>
+<p><strong>Stack:</strong> {{ showStack }}</p>
+{% endif %}
+
+{% endblock %}
+
+{# Available here:
+layout: opts.layout,
+status: err.status,
+error: err,
+showStack: app.settings.showStackError, //please avoid making public
+title: err.message
+ #}

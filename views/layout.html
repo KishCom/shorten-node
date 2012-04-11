@@ -27,7 +27,7 @@
     <div id="Modal">
         <input type="text" name="shortenedURL" id="shortenedURL" placeholder="http://{{ domain }}/x1y2x3">
         <button id="getStatsSubmitBtn">Get Stats</button>
-        <div id="statsError"></div>
+        <div id="statsError">{% block error %}{% endblock %}</div>
         <div class="close">X</div>
 
         <div id="getLinkResponse">
