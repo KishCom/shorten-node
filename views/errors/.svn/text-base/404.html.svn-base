@@ -1,6 +1,0 @@
-{% extends "error.html" %}
-
-
-{% block content %}<h1>404'd</h1>
-<p>The web page you seek<br />cannot be located but<br />endless others exist</p>
-{% endblock %}
