@@ -25,12 +25,12 @@ var Shorten = function(app){
 */
 Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
     //console.log("Looking up linkhash: " + linkHash);
-    var mongoose = this.app._locals.settings.mongoose;
+    var mongoose = this.app.locals.settings.mongoose;
     var dbCursor = mongoose.model('LinkMaps');
     dbCursor.find({"linkHash": linkHash}, function(err, results){
         if (err === null){
             if (typeof(callback) === "function"){
-                if (results.length == 0){
+                if (results.length === 0){
                     callback(false);
                     return false;
                 }else{
@@ -62,7 +62,7 @@ Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
 */
 Shorten.prototype.addNewShortenLink = function(originalURL, callback){
     var that = this; //Grab this context for after we make a DB query
-    var mongoose = this.app._locals.settings.mongoose;
+    var mongoose = this.app.locals.settings.mongoose;
     
     var newHash = that.genHash(function(newHash){
         var dbCursor = mongoose.model('LinkMaps');
@@ -97,7 +97,7 @@ Shorten.prototype.addNewShortenLink = function(originalURL, callback){
 *            }
 */
 Shorten.prototype.originalURLLookUp = function (originalURL, callback){
-    var mongoose = this.app._locals.settings.mongoose;
+    var mongoose = this.app.locals.settings.mongoose;
     var dbCursor = mongoose.model('LinkMaps');
     dbCursor.find({"linkDestination": originalURL}, function(err, results){
         if (err === null){
@@ -142,7 +142,7 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
     // Strip domain and slashes
     shortenedURL = shortenedURL.replace("http://" + this.app.settings.domain + "/", "");
     //console.log("Looking up stats for: " + shortenedURL);
-    var mongoose = this.app._locals.settings.mongoose;
+    var mongoose = this.app.locals.settings.mongoose;
     var dbCursor = mongoose.model('LinkMaps');
     // We need the link_id, look up the shortened URL first. This is an artifact of being ported over from an ancient PHP app. Will be revised when moving databases
     dbCursor.find({"linkHash": shortenedURL}, function(err, results){
@@ -288,7 +288,7 @@ Shorten.prototype.genHash = function(callback){
     }
     
     if (this.app !== undefined){ // Tests don't need to check the database - TODO add a new node_env variable/state: test
-        var mongoose = this.app._locals.settings.mongoose;
+        var mongoose = this.app.locals.settings.mongoose;
         var dbCursor = mongoose.model('LinkMaps');
         dbCursor.find({"linkHash": newHash}, function(err, results){
             if (err !== null){
@@ -334,7 +334,7 @@ Shorten.prototype.isURL = function(testURL) {
     if (alreadyKishcmTest.test(testURL) === false){
         //Make sure URL mostly looks like a URL should
         var mainURLTest = /^(https?):\/\/((?:[a-z0-9.-]|%[0-9A-F]{2}){3,})(?::(\d+))?((?:\/(?:[a-z0-9-._~!$&'()*+,;=:@]|%[0-9A-F]{2})*)*)(?:\?((?:[a-z0-9-._~!$&'()*+,;=:\/?@]|%[0-9A-F]{2})*))?(?:#((?:[a-z0-9-._~!$&'()*+,;=:\/?@]|%[0-9A-F]{2})*))?$/i;
-        return mainURLTest.test(testURL);   
+        return mainURLTest.test(testURL);
     }else{
         return false;
     }

@@ -10,9 +10,9 @@ I've only recently switched to MongoDB. This is my first project using MongoDB, 
 
 Requirements:	
 
-* Node.js >= 0.6.14
-* npm >= 1.1.12
+* Node.js >= 0.8
 * MongoDB >= 2.0.4
+* Express > 3.0
 
 What makes JavaScript development so awesome these days is the massive amount of awesome free things out there. This web app wouldn't be possible without making use of SO MUCH awesome stuff like:
 
@@ -37,6 +37,7 @@ Probably also others I'm forgetting. The glue that holds this all together is wh
 
 The front-end uses the django inspired templates package called swig. An asset manager build script is also included. It uses ams (https://github.com/kof/node-ams). If you plan to make front-end changes make sure to review the documentation there and edit build_assets.js as needed. There are some tests, but it is far from 100% test coverage (more like 20% coverage). Tests are written using nodeunit.
 
+A note on [web scale](http://mongodb-is-web-scale.com/): The way this is configured to work with MongoDB is that all logs for a given shortened URL live in the same single MongoDB document. For this simple project it's fine. However, if for some reason this project were to be deployed on a very large scale, things would break down quite quickly. Mainly: the size of a single shortened URL document from MongoDB could aquire enough log entries to exceed [MongoDB document limit size](http://www.mongodb.org/display/DOCS/Documents#Documents-MaximumDocumentSize) - and things would be very slow as it approched this limit. While I don't have benchmarks, I'm sure for a dozen or so users using normal volumed twitter accounts, it's more than adequate (at least a few thousand uses/logs per hash before you even need to start to thinking about this).
 
 ## To setup for local development
 

@@ -140,8 +140,8 @@ Routes.prototype.getLink = function (req, res){
 	}else{
 		//404 - no shortlink found with that hash
         var errorResponse ={'originalURL': null,
-                            'linkHash': null, 
-                            'timesUsed': null, 
+                            'linkHash': null,
+                            'timesUsed': null,
                             'lastUse': null,
                             'topReferrals': {},
                             'topUserAgents':{},
@@ -149,6 +149,58 @@ Routes.prototype.getLink = function (req, res){
                             };
 		res.json(errorResponse);
 	}
+};
+
+/*
+* Custom error handler
+*
+*/
+Routes.prototype.errorHandler = function(err, req, res, next){
+
+    if (err.status == 404){
+        console.error(new Date().toLocaleString(), '>> 404 :', req.params[0], ' UA: ', req.headers['user-agent'], 'IP: ', req.ip);
+    }
+
+    if(!err.name || err.name == 'Error'){
+        console.error(new Date().toLocaleString(), '>>', err);
+        console.log(err.stack);
+
+        if(req.xhr){
+            return res.send({ error: 'Internal error' }, 500);
+        }else{
+            return res.render('errors/500.html', {
+                status: 500,
+                error: err,
+                title: 'Oops! Something went wrong!',
+                devmode: req.app.settings.env,
+                domain: req.app.set('domain')
+            });
+        }
+    }
+
+    if(req.xhr){
+        return res.json({ error: err.message, stack: err.stack, allError: err}, 500);
+    }
+
+    if (err.status === undefined){
+        res.render('errors/500.html', {
+            status: err.name,
+            error: err.name,
+            showStack: err.stack,
+            title: err.message,
+            devmode: req.app.settings.env,
+            domain: req.app.set('domain')
+        });
+    }else{
+        res.render('errors/' + err.status + '.html', {
+            status: err.status,
+            error: err.name,
+            title: err.message,
+            showStack: err.stack,
+            devmode: req.app.settings.env,
+            domain: req.app.set('domain')
+        });
+    }
 };
 
 module.exports = Routes;
