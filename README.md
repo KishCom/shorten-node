@@ -11,8 +11,8 @@ I've only recently switched to MongoDB. This is my first project using MongoDB, 
 Requirements:	
 
 * Node.js >= 0.8
-* MongoDB >= 2.0.4
-* Express > 3.0
+* MongoDB >= 2
+* Express = 3
 
 What makes JavaScript development so awesome these days is the massive amount of awesome free things out there. This web app wouldn't be possible without making use of SO MUCH awesome stuff like:
 
@@ -82,7 +82,7 @@ Login/signup at heroku
 
 Create a new app on cedar, sub in your prefered app name in place of 'shortener-node' (from here on).
 
-    heroku create --stack cedar shortener-node --buildpack http://github.com/liquid/heroku-buildpack-nodejs.git
+    heroku create --stack cedar shortener-node --buildpack http://github.com/heroku/heroku-buildpack-nodejs.git
 
 Setup Heroku to be our live app environment
 

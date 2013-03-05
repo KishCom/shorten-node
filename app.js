@@ -68,8 +68,7 @@ site.configure('dev', function(){
 });
 //Live deployed mode
 site.configure('live', function(){
-    site.set('view cache', true);
-    require('swig').init({ cache: true, allowErrors: false, filters: {} });
+    require('swig').init({ cache: false, allowErrors: false, root: __dirname + "/views",  filters: {} });
     //Set your domain name for the shortener here
     site.set('domain', settings.live_domain);
     mongoose.connect(settings.live_mongodb_uri);
@@ -98,7 +97,7 @@ site.all('*', function(req, resp, next){
 **  Server startup
 *
 */
-//Forman will set the proper port for live mode, otherwise use port 8888
-var port = process.env.PORT || 80;
+//Forman will set the proper port for live mode (or set the environment variable PORT yourself), otherwise use port 8888
+var port = process.env.PORT || 8888;
 site.listen(port);
 console.log("URL Shortener listening to http://" + site.set('domain') + " in %s mode", site.settings.env);

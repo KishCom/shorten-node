@@ -1,9 +1,10 @@
 {
     "name": "shorten-node",
     "engines": {
-        "node": ">=0.8"
-    }
-    , "version": "1.6.0"
+        "node": "0.8.x",
+        "npm":  "1.2.x"
+      }
+    , "version": "1.6.2"
     , "dependencies": {
         "express": "latest",
         "consolidate": "latest",
@@ -12,7 +13,7 @@
         "validator": "0.3.9",
         "nodeunit": "0.7.1",
         "express-extras": "0.1.1",
-        "mongoose": "latest",
+        "mongoose": "3.5.5",
         "ams": "0.0.20"
     }
 }

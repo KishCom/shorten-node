@@ -5,14 +5,16 @@ body {
   width: 100%;
   *zoom: 1;
 }
-body:before, body:after {
+body:before,
+body:after {
   content: "";
   display: table;
 }
 body:after {
   clear: both;
 }
-body, html {
+body,
+html {
   font-family: 'PTSans-Regular', sans-serif;
   font-size: 11px;
   color: #444;
@@ -37,7 +39,9 @@ a:visited,
 a:active {
   color: #444;
 }
-#header, #content, #footer {
+#header,
+#content,
+#footer {
   width: 81.25%;
   margin: 0 1.0416666666666665%;
   margin: 0 auto;
@@ -45,7 +49,8 @@ a:active {
   max-width: 850px;
   overflow: hidden;
 }
-#instructions, #response {
+#instructions,
+#response {
   font-family: 'PTSans-Regular', sans-serif;
   font-size: 1em;
   padding-top: 0.5em;
@@ -113,7 +118,8 @@ a:active {
 :-moz-placeholder {
   color: #999;
 }
-#originalURL, #shortenedURL {
+#originalURL,
+#shortenedURL {
   font-size: 2em;
   font-family: 'PTSans-Regular', sans-serif;
   width: 80%;
@@ -154,7 +160,8 @@ button:hover {
   clear: both;
   display: inline-block;
 }
-#errorMessage, #statsError {
+#errorMessage,
+#statsError {
   font-family: 'PTSans-Bold', sans-serif;
   font-weight: bolder;
   font-size: 1.5em;
@@ -171,7 +178,8 @@ button:hover {
 #Statstable {
   clear: both;
 }
-#StatsTitle, th {
+#StatsTitle,
+th {
   font-family: 'PTSans-Bold', sans-serif;
   font-weight: bolder;
   font-size: 1.75em;
