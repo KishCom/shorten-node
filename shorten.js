@@ -20,7 +20,7 @@ var Shorten = function(app){
 *            {'originalURL': 'http://originalurldestination.com', // Link destination
 *             'linkHash': 'xxxYYY', // Kish.cm hash ( http://kish.cm/xxxYYY )
 *             'timestamp': '2012-02-19T02:48:26.000Z', // Timestamp of when this was created
-*             'id':        ObjectId("4f6e58edaf5c268231000000") // Database ID
+*             'mongoId':   '4f6e58edaf5c268231000000' // Old MongoDB ID (will be dropped after migration)
 *            }
 */
 Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
@@ -38,16 +38,17 @@ Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
                 callback(false);
                 return false;
             }else{
-                var returnResullt = {};
+                var returnResult = {};
                 result.forEach(function(row){
                     //all row of result
                     row.forEach(function(name,value,ts,ttl){
                         //all column of row
                         //console.log(name + " holds " + value);
-                        returnResullt[name] = value;
+                        returnResult[name] = value;
                     });
                 });
-                callback(returnResullt);
+                console.log(returnResult);
+                callback(returnResult);
 
                 ///////
                 ////// TODO LOG STATS HERE
@@ -67,7 +68,25 @@ Shorten.prototype.addNewShortenLink = function(originalURL, callback){
     var that = this; //Grab this context for after we make a DB query
     var mongoose = this.app.locals.settings.mongoose;
     var newHash = that.genHash(function(newHash){
-        var dbCursor = mongoose.model('LinkMaps');
+        var cass = this.app.get('cassandra');
+        cass.cql('INSERT INTO linkmaps ("linkHash", "linkDestination", "timestamp") VALUES (?, ?, ?)', [newHash, originalURL, new Date()], function(err, result){
+            if (err){
+                console.log(err);
+                res.json(err);
+            }else{
+                console.log(result.length);
+                result.forEach(function(row){
+                    //all row of result
+                    row.forEach(function(name,value,ts,ttl){
+                        //all column of row
+                        console.log(name + " holds " + value);
+                    });
+                });
+
+                res.json(result);
+            }
+        });
+        /*var dbCursor = mongoose.model('LinkMaps');
         dbCursor = new dbCursor({linkDestination: originalURL, linkHash: newHash, timestamp: new Date() });
         dbCursor.save(function(err){
             if (err === null){
@@ -81,6 +100,7 @@ Shorten.prototype.addNewShortenLink = function(originalURL, callback){
                 return false;
             }
         });
+        */
     });
 };
 
@@ -221,7 +241,7 @@ Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, call
                                'topUserAgents': [],
                                'error' : false
                            };
-    
+
     // Get the top 10 useragents and referrers
     var knownAgents = [], knownReferrals = [];
     for (var i = 0; resultSet.length > i; i++){
@@ -237,7 +257,7 @@ Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, call
             knownAgents.push({'userAgent': resultSet[i].userAgent, 'agentCount': 1});
         }
         found = false;
-        
+
         // Check known referrers for this result
         for (var b = 0; knownReferrals.length > b; b++){
             if (knownReferrals[b].referrer == resultSet[i].referrer){

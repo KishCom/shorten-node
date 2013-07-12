@@ -122,21 +122,13 @@ site.post('/rpc/getLink', routes.getLink);
 
 site.get('/cassandra', function(req, res, next){
     var cass = site.get('cassandra');
-    cass.cql('SELECT * FROM linkmaps WHERE "linkHash" = ?', ['xxxyyy'], function(err, result){
+    var curUnixtime = new Date().getTime();
+    cass.cql('INSERT INTO linkmaps ("linkHash", "linkDestination", "timestamp") VALUES (?, ?, ?)', ["x1y1b2", "http://example.com", curUnixtime ], function(err, result){
         if (err){
             console.log(err);
             res.json(err);
         }else{
-            console.log(result.length);
-            result.forEach(function(row){
-                //all row of result
-                row.forEach(function(name,value,ts,ttl){
-                    //all column of row
-                    console.log(name + " holds " + value);
-                });
-            });
-
-            res.json(result);
+            // Insert was good!
         }
     });
 });
