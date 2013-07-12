@@ -25,31 +25,34 @@ var Shorten = function(app){
 */
 Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
     //console.log("Looking up linkhash: " + linkHash);
-    var mongoose = this.app.locals.settings.mongoose;
-    var dbCursor = mongoose.model('LinkMaps');
-    dbCursor.find({"linkHash": linkHash}, function(err, results){
-        if (err === null){
-            if (typeof(callback) === "function"){
-                if (results.length === 0){
-                    callback(false);
-                    return false;
-                }else{
-                    callback(results[0]);
-                    //Log the data back if we have it
-                    if (results[0].linkStats.length > 0){
-                        results[0].linkStats.push(userInfo);
-                    }else{
-                        results[0].linkStats = new Array(userInfo);
-                    }
-                    results[0].save();
-                    return results[0];
-                }
-            }
-        }else{
+    var cass = this.app.get('cassandra');
+    cass.cql('SELECT * FROM linkmaps WHERE "linkHash" = ?', [linkHash], function(err, result){
+        if (err){
             console.log("Some DB error:");
             console.log(err);
             callback(false);
             return false;
+        }else{
+            // No link with that hash found
+            if (result.length === 0){
+                callback(false);
+                return false;
+            }else{
+                var returnResullt = {};
+                result.forEach(function(row){
+                    //all row of result
+                    row.forEach(function(name,value,ts,ttl){
+                        //all column of row
+                        //console.log(name + " holds " + value);
+                        returnResullt[name] = value;
+                    });
+                });
+                callback(returnResullt);
+
+                ///////
+                ////// TODO LOG STATS HERE
+                //////
+            }
         }
     });
 };
@@ -63,7 +66,6 @@ Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
 Shorten.prototype.addNewShortenLink = function(originalURL, callback){
     var that = this; //Grab this context for after we make a DB query
     var mongoose = this.app.locals.settings.mongoose;
-    
     var newHash = that.genHash(function(newHash){
         var dbCursor = mongoose.model('LinkMaps');
         dbCursor = new dbCursor({linkDestination: originalURL, linkHash: newHash, timestamp: new Date() });

@@ -122,7 +122,7 @@ site.post('/rpc/getLink', routes.getLink);
 
 site.get('/cassandra', function(req, res, next){
     var cass = site.get('cassandra');
-    cass.cql('SELECT * FROM linkmaps WHERE "linkHash" = ?', ['xxxyyyy'], function(err, result){
+    cass.cql('SELECT * FROM linkmaps WHERE "linkHash" = ?', ['xxxyyy'], function(err, result){
         if (err){
             console.log(err);
             res.json(err);
