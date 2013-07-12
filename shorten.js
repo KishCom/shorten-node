@@ -286,21 +286,19 @@ Shorten.prototype.genHash = function(callback){
         }
         newHash = newHash + digit;
     }
-    
+
     if (this.app !== undefined){ // Tests don't need to check the database - TODO add a new node_env variable/state: test
-        var mongoose = this.app.locals.settings.mongoose;
-        var dbCursor = mongoose.model('LinkMaps');
-        dbCursor.find({"linkHash": newHash}, function(err, results){
-            if (err !== null){
+        var cass = site.get('cassandra');
+        cass.cql('SELECT * FROM linkmaps WHERE "linkHash" = ?', [newHash], function(err, result){
+            if (err){
                 console.log(err);
             }else{
-                // Call this function recursively until we find a hash that doesn't exist yet
-                if (results.length > 0){
-                    // Statistically, this will likely never be called ever
-                    this.genHash();
-                }else{
+                // New hash doesn't exist, send it back as good
+                if (result.length === 0){
                     callback(newHash);
                     return newHash;
+                }else{
+                    this.genHash();
                 }
             }
         });

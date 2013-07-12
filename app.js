@@ -1,14 +1,14 @@
 /*
 *   shorten-node - A URL Shortening web app
-*    Andrew Kish, 2012
+*    Andrew Kish, 2012-2013
 */
 
 var express = require('express'),
     // TODO: Update this when consolidate.js gets fixed
     swig = require('./consolidate-swig').swig, /* Extends dont work correctly in current version of consolidate */
     Routes = require('./routes'),
-    mongoose = require('mongoose'),
-    Schema = mongoose.Schema,
+    helenus = require('helenus'),
+    cassPool, // Pool of Cassandra connections
     extras = require('express-extras'),
     settings = require('./settings').shorten_settings,
     models = require('./settings').models,
@@ -61,9 +61,26 @@ site.configure('dev', function(){
     site.set('domain', settings.dev_domain);
     site.use(express.logger('dev'));
     console.log("Running in dev mode");
-    mongoose.connect(settings.dev_mongodb_uri);
-    mongoose.model('LinkMaps', models.LinkMaps, 'linkmaps'); //models is pulled in from settings.json
-    site.set('mongoose', mongoose);
+    site.set('helenus', helenus);
+    cassPool = new helenus.ConnectionPool({
+        hosts      : settings.dev_cassandra_host,
+        keyspace   : 'shorten_node',
+        //user       : settings.dev_cassandra_user, // TBD
+        //password   : settings.dev_cassandra_pass, // TBD
+        timeout    : 3000,
+        cqlVersion : '3.0.0'
+    });
+    cassPool.on('error', function(err){
+        console.error(err.name, err.message);
+    });
+    cassPool.connect(function(err, keyspace){
+        if(err){
+            console.log("Double check: Your host name and port, and that your keyspace exists.");
+            throw(err);
+        } else {
+            site.set("cassandra", cassPool);
+        }
+    });
     //site.use(express.errorHandler({ dumpExceptions: true, showStack: true}));
 });
 //Live deployed mode
@@ -71,9 +88,25 @@ site.configure('live', function(){
     require('swig').init({ cache: false, allowErrors: false, root: __dirname + "/views",  filters: {} });
     //Set your domain name for the shortener here
     site.set('domain', settings.live_domain);
-    mongoose.connect(settings.live_mongodb_uri);
-    mongoose.model('LinkMaps', models.LinkMaps, 'linkmaps'); //models is pulled in from settings.json
-    site.set('mongoose', mongoose);
+    site.set('helenus', helenus);
+    cassPool = new helenus.ConnectionPool({
+        hosts      : settings.live_cassandra_host,
+        keyspace   : 'linkmaps',
+        //user       : settings.live_cassandra_user, // TBD
+        //password   : settings.live_cassandra_pass, // TBD
+        timeout    : 3000,
+        cqlVersion : '3.0.0'
+    });
+    cassPool.on('error', function(err){
+        console.error(err.name, err.message);
+    });
+    cassPool.connect(function(err, keyspace){
+        if(err){
+            throw(err);
+        } else {
+            site.set("cassandra", cassPool);
+        }
+    });
 });
 
 
@@ -86,6 +119,28 @@ site.get('/', routes.index);
 site.get('/developers/', routes.developers);
 site.post('/rpc/setLink', routes.setLink);
 site.post('/rpc/getLink', routes.getLink);
+
+site.get('/cassandra', function(req, res, next){
+    var cass = site.get('cassandra');
+    cass.cql('SELECT * FROM linkmaps WHERE "linkHash" = ?', ['xxxyyyy'], function(err, result){
+        if (err){
+            console.log(err);
+            res.json(err);
+        }else{
+            console.log(result.length);
+            result.forEach(function(row){
+                //all row of result
+                row.forEach(function(name,value,ts,ttl){
+                    //all column of row
+                    console.log(name + " holds " + value);
+                });
+            });
+
+            res.json(result);
+        }
+    });
+});
+
 site.get(/^\/([a-zA-Z0-9]{6,32})$/, routes.navLink);
 //Catch all other attempted routes and throw them a 404!
 site.all('*', function(req, resp, next){

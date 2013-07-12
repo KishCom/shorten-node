@@ -6,12 +6,12 @@ Shorten-node - A URL Shortener web app written in Node.js, with a MongoDB backen
 
 The app that powers my URL shortener "kish.cm" has come to represent a kind of "Hello world" for learning new languages and frameworks. This is my node.js powered version and is the version running on http://kish.cm (current as of time of writing).
 
-I've only recently switched to MongoDB. This is my first project using MongoDB, and it is very much a learning experience. Please contact me if you see better ways of doing things, the whole point is to learn how MongoDB works.
+This is my first project using Cassandra, and it is very much a learning experience. Please contact me if you see better ways of doing things, the whole point is to learn how Cassandra works.
 
 Requirements:	
 
-* Node.js >= 0.8
-* MongoDB >= 2
+* Node.js >= 0.10
+* Cassandra >= 1.2.4
 * Express = 3
 
 What makes JavaScript development so awesome these days is the massive amount of awesome free things out there. This web app wouldn't be possible without making use of SO MUCH awesome stuff like:
@@ -36,8 +36,6 @@ What makes JavaScript development so awesome these days is the massive amount of
 Probably also others I'm forgetting. The glue that holds this all together is what I wrote and it's licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php).
 
 The front-end uses the django inspired templates package called swig. An asset manager build script is also included. It uses ams (https://github.com/kof/node-ams). If you plan to make front-end changes make sure to review the documentation there and edit build_assets.js as needed. There are some tests, but it is far from 100% test coverage (more like 20% coverage). Tests are written using nodeunit.
-
-A note on [web scale](http://mongodb-is-web-scale.com/): The way this is configured to work with MongoDB is that all logs for a given shortened URL live in the same single MongoDB document. For this simple project it's fine. However, if for some reason this project were to be deployed on a very large scale, things would break down quite quickly. Mainly: the size of a single shortened URL document from MongoDB could aquire enough log entries to exceed [MongoDB document limit size](http://www.mongodb.org/display/DOCS/Documents#Documents-MaximumDocumentSize) - and things would be very slow as it approched this limit. While I don't have benchmarks, I'm sure for a dozen or so users using normal volumed twitter accounts, it's more than adequate (at least a few thousand uses/logs per hash before you even need to start to thinking about this).
 
 ## To setup for local development
 
