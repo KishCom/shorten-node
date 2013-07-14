@@ -108,7 +108,10 @@ stream.on('data', function (doc) {
 
     // Loop over all the stats and push them into acunu
     var completed = 0;
+    var cnt = 0;
+    var totalExpected = 0;
     for (var dracula = 0, allStatsCnt = doc.linkStats.length; allStatsCnt > dracula; dracula++){
+        cnt++;
         var stat = doc.linkStats[dracula];
         stat.fingerprint = crypto.createHash('md5').update((stat.ip + stat.userAgent)).digest("hex");
         stat.timestamp = new Date(stat.timestamp).getTime();
@@ -120,6 +123,8 @@ stream.on('data', function (doc) {
                             "fingerprint": stat.fingerprint,
                             "timestamp": stat.timestamp
                 };
+        console.log("Firing off stat " + cnt + " linkhash: " + doc.linkHash);
+        totalExpected = totalExpected + doc.linkStats.length;
         acuReq({uri: acunu_uri,
             body: JSON.stringify(linkStats),
             method: "POST"},    
@@ -129,9 +134,7 @@ stream.on('data', function (doc) {
                     console.log("Error logging to acunu:");
                     console.log(e);
                 }else{
-                    if (completed >= allStatsCnt){
-                        console.log("Imported stats batch into acunu.");
-                    }
+                    console.log("Completed " + completed + " of expected " + totalExpected);
                 }
             }
         );
