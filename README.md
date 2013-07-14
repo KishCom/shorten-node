@@ -1,4 +1,4 @@
-    __..         ,                    .    
+    __..         ,                    .
     (__ |_  _ ._.-+- _ ._  ___ ._  _  _| _ 
     .__)[ )(_)[   | (/,[ )     [ )(_)(_](/,
 
@@ -8,7 +8,7 @@ The app that powers my URL shortener "kish.cm" has come to represent a kind of "
 
 This is my first project using Cassandra, and it is very much a learning experience. Please contact me if you see better ways of doing things, the whole point is to learn how Cassandra works.
 
-Requirements:	
+Requirements:
 
 * Node.js >= 0.10
 * Cassandra >= 1.2.4

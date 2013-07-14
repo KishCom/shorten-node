@@ -14,6 +14,7 @@
         "nodeunit": "0.7.1",
         "express-extras": "0.1.1",
         "helenus": "0.6.x",
+        "request": "latest",
         "ams": "0.0.20"
     }
 }

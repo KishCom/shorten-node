@@ -9,7 +9,9 @@ var Shorten = function(app){
         this.domain = this.app.settings.domain;
     }
 };
-
+var acuReq = require('request');
+var settings = require('./settings').shorten_settings;
+var crypto = require('crypto');
 
 /*
 * Look up information about a given shortened URL hash
@@ -26,6 +28,7 @@ var Shorten = function(app){
 Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
     //console.log("Looking up linkhash: " + linkHash);
     var cass = this.app.get('cassandra');
+    var thisShorten = this;
     cass.cql('SELECT * FROM linkmaps WHERE "linkHash" = ?', [linkHash], function(err, result){
         if (err){
             console.log("Some DB error:");
@@ -38,21 +41,15 @@ Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
                 callback(false);
                 return false;
             }else{
-                var returnResult = {};
-                result.forEach(function(row){
-                    //all row of result
-                    row.forEach(function(name,value,ts,ttl){
-                        //all column of row
-                        //console.log(name + " holds " + value);
-                        returnResult[name] = value;
-                    });
-                });
-                console.log(returnResult);
+                var returnResult = thisShorten.simpleCassResult(result);
+                //console.log(returnResult);
                 callback(returnResult);
-
-                ///////
-                ////// TODO LOG STATS HERE
-                //////
+                var linkStats = userInfo;
+                linkStats.linkHash = returnResult.linkHash;
+                linkStats.linkDestination = returnResult.linkDestination;
+                linkStats.timestamp = new Date().getTime();
+                linkStats.fingerprint = thisShorten.getFingerprint(userInfo.ip, userInfo.userAgent);
+                thisShorten.StatsToAcunu(linkStats);
             }
         }
     });
@@ -66,41 +63,19 @@ Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
 */
 Shorten.prototype.addNewShortenLink = function(originalURL, callback){
     var that = this; //Grab this context for after we make a DB query
-    var mongoose = this.app.locals.settings.mongoose;
     var newHash = that.genHash(function(newHash){
-        var cass = this.app.get('cassandra');
-        cass.cql('INSERT INTO linkmaps ("linkHash", "linkDestination", "timestamp") VALUES (?, ?, ?)', [newHash, originalURL, new Date()], function(err, result){
+        var cass = that.app.get('cassandra');
+        var curUnixtime = new Date().getTime();
+        cass.cql('INSERT INTO linkmaps ("linkHash", "linkDestination", "timestamp") VALUES (?, ?, ?)', [newHash, originalURL, curUnixtime], function(err, result){
             if (err){
                 console.log(err);
-                res.json(err);
-            }else{
-                console.log(result.length);
-                result.forEach(function(row){
-                    //all row of result
-                    row.forEach(function(name,value,ts,ttl){
-                        //all column of row
-                        console.log(name + " holds " + value);
-                    });
-                });
-
-                res.json(result);
-            }
-        });
-        /*var dbCursor = mongoose.model('LinkMaps');
-        dbCursor = new dbCursor({linkDestination: originalURL, linkHash: newHash, timestamp: new Date() });
-        dbCursor.save(function(err){
-            if (err === null){
-                if (typeof(callback) === "function"){
-                    //Get and return our newly created short URL
-                    that.originalURLLookUp(originalURL, callback);
-                    return true;
-                }
-            }else{
-                console.log(err);
                 return false;
+            }else{
+                //Get and return our newly created short URL
+                that.originalURLLookUp(originalURL, callback);
+                return true;
             }
         });
-        */
     });
 };
 
@@ -119,21 +94,27 @@ Shorten.prototype.addNewShortenLink = function(originalURL, callback){
 *            }
 */
 Shorten.prototype.originalURLLookUp = function (originalURL, callback){
-    var mongoose = this.app.locals.settings.mongoose;
-    var dbCursor = mongoose.model('LinkMaps');
-    dbCursor.find({"linkDestination": originalURL}, function(err, results){
-        if (err === null){
+    var thisShorten = this;
+    var cass = this.app.get('cassandra');
+    cass.cql('SELECT * FROM linkmaps WHERE "linkDestination" = ?', [originalURL], function(err, results){
+        if (err){
+            console.log(false);
+            callback(false);
+            return false;
+        }else{
             if (typeof(callback) === "function"){
-                if (results[0] !== undefined){
-                    callback(results[0]);
-                    return results[0];
+                // Check to make sure we have the URL on file
+                if (results.length > 0){
+                    var originalURLResult = thisShorten.simpleCassResult(results);
+                    console.log(originalURLResult);
+                    callback(originalURLResult);
+                    return originalURLResult;
                 }else{
+                    // We don't have a shortened URL withthat hash
                     callback(false);
                     return false;
                 }
             }
-        }else{
-            console.log(err);
         }
     });
 };
@@ -310,7 +291,7 @@ Shorten.prototype.genHash = function(callback){
     }
 
     if (this.app !== undefined){ // Tests don't need to check the database - TODO add a new node_env variable/state: test
-        var cass = site.get('cassandra');
+        var cass = this.app.get('cassandra');
         cass.cql('SELECT * FROM linkmaps WHERE "linkHash" = ?', [newHash], function(err, result){
             if (err){
                 console.log(err);
@@ -358,6 +339,47 @@ Shorten.prototype.isURL = function(testURL) {
     }else{
         return false;
     }
+};
+
+/*
+*   Stupid simple user fingerprint builder
+*/
+Shorten.prototype.getFingerprint = function(ip, userAgent){
+    return crypto.createHash('md5').update((ip + userAgent)).digest("hex");
+};
+
+/*
+*   Helper function that changes Helenus objects into more simple {"name":value} objects
+*/
+Shorten.prototype.simpleCassResult = function(result){
+    var returnResult = {};
+    result.forEach(function(row){
+        //all row of result
+        row.forEach(function(name,value,ts,ttl){
+            //all column of row
+            //console.log(name + " holds " + value);
+            returnResult[name] = value;
+        });
+    });
+    return returnResult;
+};
+
+/*
+*   Helper function to send short-link use stats to Acunu
+*/
+
+Shorten.prototype.StatsToAcunu = function(linkStats){
+    console.log(linkStats);
+    acuReq({uri: settings.dev_acunu_uri,
+            body: JSON.stringify(linkStats),
+            method: "POST"},    
+            function(e, r, body){
+                if (e){
+                    console.log("Error logging to acunu:");
+                    console.log(e);
+                }
+            }
+    );
 };
 
 module.exports = Shorten;

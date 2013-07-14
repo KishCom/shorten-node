@@ -33,7 +33,7 @@ site.configure(function(){
     site.use(express.static(__dirname + '/public'));
 
     //Middlewares
-    site.use(extras.fixIP()); //Normalize various IP address sources to be more accurate
+    site.use(extras.fixIP(['HTTP-X-REAL-IP','X-REAL-IP'])); //Normalize various IP address sources to be more accurate
     site.use(extras.throttle({ //Simple throttle to prevent API abuse
         urlCount: 5,
         urlSec: 1,
@@ -122,13 +122,20 @@ site.post('/rpc/getLink', routes.getLink);
 
 site.get('/cassandra', function(req, res, next){
     var cass = site.get('cassandra');
-    var curUnixtime = new Date().getTime();
-    cass.cql('INSERT INTO linkmaps ("linkHash", "linkDestination", "timestamp") VALUES (?, ?, ?)', ["x1y1b2", "http://example.com", curUnixtime ], function(err, result){
+    cass.cql('SELECT * FROM linkmaps WHERE "linkDestination" = ?', ["http://viafourous.com"], function(err, results){
         if (err){
             console.log(err);
-            res.json(err);
         }else{
-            // Insert was good!
+            
+            // Check to make sure we have the URL on file
+            if (results.length > 0){
+                console.log(results);
+                res.json(results);
+            }else{
+                // We don't have a shortened URL withthat hash
+                console.log("NotFound");
+                res.json({"error": "not found"});
+            }
         }
     });
 });
