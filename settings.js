@@ -1,5 +1,5 @@
 exports.shorten_settings = {
-	dev_domain: 'localhost:4200', // Your development domain
+	dev_domain: 'localst:4200', // Your development domain
 	live_domain: 'kish.cm', // Live domain
 	dev_cassandra_host: ['localhost:9160'],
     dev_cassandra_user: 'cassandra',
