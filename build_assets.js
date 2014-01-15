@@ -1,5 +1,5 @@
 var ams = require('ams');
-var sys = require('util')
+var sys = require('util');
 var exec = require('child_process').exec;
 
 var ROOT_DIR = __dirname + '/public/media',
@@ -30,7 +30,7 @@ function runBuild(){
      JS_DIR + '/zeroclipboard/ZeroClipboard.js',
      JS_DIR + '/shorten.js'])
     .process({
-    	cssvendor: false, // Less takes care of vendor specific prefixes
+        cssvendor: false, // Less takes care of vendor specific prefixes
         cssabspath: {
             host: HOST_NAME,
             verbose: true

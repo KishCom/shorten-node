@@ -15,7 +15,7 @@
         "express-extras": "0.1.1",
         "mongoose": "3.5.5",
         "bunyan": "latest",
-        "ams": "0.0.20",
+        "ams": "latest",
         "less-middleware": "latest"
     }
 }
