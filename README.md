@@ -46,6 +46,8 @@ Edit settings.js to match your development and live configurations. You'll need 
 Install dependencies
 
     npm install
+    npm install -g bunyan
+    npm install -g nodemon
 
 Copy and setup local settings:
 
@@ -55,7 +57,7 @@ Copy and setup local settings:
 
 Launch a dev server
 
-    NODE_ENV=dev node app.js
+    NODE_ENV=dev nodemon app.js | bunyan
 
 The shortener will be available at http://localhost:8888/
 
@@ -105,9 +107,9 @@ Make sure assets are compiled properly
 
 Don't forget to commit your changes
 
-    git commit -a -m "Updated my MongoDB URIs and rebuilt assets."
+    git commit -am "Updated my MongoDB URIs and rebuilt assets."
 
-If you use MongoLab addon you can get the proper URI info by listing the config (replace 'shortener-node' with your app name)
+If you use MongoLab addon ([free teir available](https://addons.heroku.com/mongolab#sandbox)) you can get the proper URI info by listing the config (replace 'shortener-node' with your app name)
 You should see: "NODE_ENV => live" and "MONGOLAB_URI => mongodb://xxx:yyy@somehost.com/heroku_app00000" as part of the output of this command:
 
     heroku config --app shortener-node
