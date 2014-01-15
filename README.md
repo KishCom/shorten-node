@@ -109,23 +109,24 @@ Don't forget to commit your changes
 
     git commit -am "Updated my MongoDB URIs and rebuilt assets."
 
-If you use MongoLab addon ([free teir available](https://addons.heroku.com/mongolab#sandbox)) you can get the proper URI info by listing the config (replace 'shortener-node' with your app name)
-You should see: "NODE_ENV => live" and "MONGOLAB_URI => mongodb://xxx:yyy@somehost.com/heroku_app00000" as part of the output of this command:
+If you use MongoLab addon ([free teir available](https://addons.heroku.com/mongolab#sandbox)), leave the `live_mongodb_uri` in `settings.js` as an empty string -- it will be picked up by shorten-node automatically. Using other services you can get the proper URI info by listing the config (replace 'shortener-node' with your app name) -- you will need to populate `live_mongodb_uri` in `settings.js` manually.
+Once you've got your mongodb and domain settings changed, add it to your repo and commit the changes.
+
+    # Be careful not to publish settings.js publically! Don't push this branch to your public github or bitbucket!
+    git add settings.js
+    git commit -am "Added my settings"
+
+You should see: "NODE_ENV => live" part of the output of this command (replacing 'shortener-node' with the name of your app):
 
     heroku config --app shortener-node
 
- You're probably not going to want to use their domain
-
-    heroku addons:add custom_domains
-
-Replace kish.cm with the domain of your shortener (and set your domain up to point to this app properly)
+You're probably not going to want to use their placeholder domain. Replace kish.cm with the domain of your shortener (and [set your domain up to point to this app properly](https://devcenter.heroku.com/articles/custom-domains))
 
     heroku domains:add kish.cm
 
 Finally, push the repo to heroku, if everything is working your app is now deployed and live!
 
     git push heroku master
-
 
 ## To update your app running on heroku
 
