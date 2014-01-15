@@ -10,7 +10,7 @@ I've only recently switched to MongoDB. This is my first project using MongoDB, 
 
 Requirements:	
 
-* Node.js >= 0.8
+* Node.js >= 0.10
 * MongoDB >= 2
 * Express = 3
 
@@ -45,7 +45,7 @@ Edit settings.js to match your development and live configurations. You'll need 
 
 Install dependencies
 
-    npm install -d
+    npm install
 
 Launch a dev server
 
