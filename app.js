@@ -39,7 +39,9 @@ site.configure(function(){
         urlSec: 1,
         holdTime: 5,
         whitelist: {
-        '127.0.0.1': true
+            '127.0.0.1': true,
+            'localhost': true,
+            '192.168.2.99': true // You'll want to whitelist any testing servers
         }
     }));
     site.use(express.bodyParser()); //Make use of x-www-form-erlencoded and json app-types

@@ -47,14 +47,22 @@ Install dependencies
 
     npm install
 
+Copy and setup local settings:
+
+    cp settings.default.js settings.js
+    # Setup your domain and mongodb server URI
+    vim settings.js
+
 Launch a dev server
 
     NODE_ENV=dev node app.js
 
 The shortener will be available at http://localhost:8888/
 
-With your server still running run the tests (update DEV_SERVER_HOST, DEV_SERVER_PORT in tests.js if you need to)
+Tests will only pass after shorten a URL and define `TEST_LINK_HASH` and `EXPECTED_ORIGINAL_URL` inside tests.js. Simply shorten a URL with your server and use those values to set the variables in tests.js properly.
+After that you can run the tests like this (make sure your server is running!):
 
+    sudo npm install -g nodeunit
     nodeunit tests.js
 
 

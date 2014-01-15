@@ -18,5 +18,10 @@
         "bunyan": "latest",
         "ams": "latest",
         "less-middleware": "latest"
+    },
+    "devDependencies":{
+            "nodeunit": "latest",
+            "request": "latest",
+            "async": "latest"
     }
 }
