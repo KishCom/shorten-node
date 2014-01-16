@@ -4,15 +4,9 @@
 
 Shorten-node - A URL Shortener web app written in Node.js, with a MongoDB backend.
 
-The app that powers my URL shortener "kish.cm" has come to represent a kind of "Hello world" for learning new languages and frameworks. This is my node.js powered version and is the version running on http://kish.cm (current as of time of writing).
+The app that powers my URL shortener "kish.cm" has come to represent a kind of "Hello world" for learning new languages and frameworks. This is my node.js powered version and is the version running on http://kish.cm that has been up and serving links and stats for over 2 years now.
 
-I've only recently switched to MongoDB. This is my first project using MongoDB, and it is very much a learning experience. Please contact me if you see better ways of doing things, the whole point is to learn how MongoDB works.
-
-Requirements:	
-
-* Node.js >= 0.10
-* MongoDB >= 2
-* Express = 3
+When I started this project I didn't know much about MongoDB, however over the course of a few years it's easy to see how I would have done things differently. However, it's not broken yet so I'm not going to rewrite things (that's why there's no Grunt.js) -- it works well on the scale I use it.
 
 What makes JavaScript development so awesome these days is the massive amount of awesome free things out there. This web app wouldn't be possible without making use of SO MUCH awesome stuff like:
 
@@ -32,6 +26,7 @@ What makes JavaScript development so awesome these days is the massive amount of
 * express-extras (https://github.com/davglass/express-extras)
 * ZeroClipboard (http://code.google.com/p/zeroclipboard/)
 * node-ams (https://github.com/kof/node-ams)
+* And Heroku for hosting of course!
 
 Probably also others I'm forgetting. The glue that holds this all together is what I wrote and it's licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php).
 
