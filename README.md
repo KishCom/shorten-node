@@ -4,15 +4,14 @@
 
 Shorten-node - A URL Shortener web app written in Node.js, with a MongoDB backend.
 
-The app that powers my URL shortener "kish.cm" has come to represent a kind of "Hello world" for learning new languages and frameworks. This is my node.js powered version and is the version running on http://kish.cm (current as of time of writing).
-
+The app that powers my URL shortener "kish.cm" has come to represent a kind of "Hello world" for learning new languages and frameworks. This is my node.js powered version and is the version running on http://kish.cm that has been up and serving links and stats for over 3 years now.
 This is my first project using Cassandra, and it is very much a learning experience. Please contact me if you see better ways of doing things, the whole point is to learn how Cassandra works.
 
 Requirements:
 
-* Node.js >= 0.10
-* Cassandra >= 1.2.4
-* Express = 3
+* Node.js >= 0.10.x
+* Cassandra >= 2.0.4
+* Express = 3.x
 
 What makes JavaScript development so awesome these days is the massive amount of awesome free things out there. This web app wouldn't be possible without making use of SO MUCH awesome stuff like:
 
@@ -43,16 +42,26 @@ Edit settings.js to match your development and live configurations. You'll need 
 
 Install dependencies
 
-    npm install -d
+    npm install
+    npm install -g bunyan
+    npm install -g nodemon
+
+Copy and setup local settings:
+
+    cp settings.default.js settings.js
+    # Setup your domain and mongodb server URI
+    vim settings.js
 
 Launch a dev server
 
-    NODE_ENV=dev node app.js
+    NODE_ENV=dev nodemon app.js | bunyan
 
 The shortener will be available at http://localhost:8888/
 
-With your server still running run the tests (update DEV_SERVER_HOST, DEV_SERVER_PORT in tests.js if you need to)
+Tests will only pass after shorten a URL and define `TEST_LINK_HASH` and `EXPECTED_ORIGINAL_URL` inside tests.js. Simply shorten a URL with your server and use those values to set the variables in tests.js properly.
+After that you can run the tests like this (make sure your server is running!):
 
+    sudo npm install -g nodeunit
     nodeunit tests.js
 
 
@@ -95,25 +104,26 @@ Make sure assets are compiled properly
 
 Don't forget to commit your changes
 
-    git commit -a -m "Updated my MongoDB URIs and rebuilt assets."
+    git commit -am "Updated my MongoDB URIs and rebuilt assets."
 
-If you use MongoLab addon you can get the proper URI info by listing the config (replace 'shortener-node' with your app name)
-You should see: "NODE_ENV => live" and "MONGOLAB_URI => mongodb://xxx:yyy@somehost.com/heroku_app00000" as part of the output of this command:
+If you use MongoLab addon ([free teir available](https://addons.heroku.com/mongolab#sandbox)), leave the `live_mongodb_uri` in `settings.js` as an empty string -- it will be picked up by shorten-node automatically. Using other services you can get the proper URI info by listing the config (replace 'shortener-node' with your app name) -- you will need to populate `live_mongodb_uri` in `settings.js` manually.
+Once you've got your mongodb and domain settings changed, add it to your repo and commit the changes.
+
+    # Be careful not to publish settings.js publically! Don't push this branch to your public github or bitbucket!
+    git add settings.js
+    git commit -am "Added my settings"
+
+You should see: "NODE_ENV => live" part of the output of this command (replacing 'shortener-node' with the name of your app):
 
     heroku config --app shortener-node
 
- You're probably not going to want to use their domain
-
-    heroku addons:add custom_domains
-
-Replace kish.cm with the domain of your shortener (and set your domain up to point to this app properly)
+You're probably not going to want to use their placeholder domain. Replace kish.cm with the domain of your shortener (and [set your domain up to point to this app properly](https://devcenter.heroku.com/articles/custom-domains))
 
     heroku domains:add kish.cm
 
 Finally, push the repo to heroku, if everything is working your app is now deployed and live!
 
     git push heroku master
-
 
 ## To update your app running on heroku
 

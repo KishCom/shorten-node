@@ -1,11 +1,11 @@
 {
     "name": "shorten-node",
+    "author": "Andrew Kish <akish@kishcom.com>",
+    "version": "2.0.0",
     "engines": {
-        "node": "0.10.x",
-        "npm":  "1.2.x"
-      }
-    , "version": "1.7.0"
-    , "dependencies": {
+        "node": "0.10.x"
+     },
+    "dependencies": {
         "express": "latest",
         "consolidate": "latest",
         "swig": "latest",
@@ -13,8 +13,17 @@
         "validator": "0.3.9",
         "nodeunit": "0.7.1",
         "express-extras": "0.1.1",
+
         "helenus": "0.6.x",
         "request": "latest",
-        "ams": "0.0.20"
+        "ams": "0.0.20",
+        "bunyan": "latest",
+        "ams": "latest",
+        "less-middleware": "latest"
+    },
+    "devDependencies":{
+            "nodeunit": "latest",
+            "request": "latest",
+            "async": "latest"
     }
 }

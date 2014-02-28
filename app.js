@@ -1,32 +1,32 @@
 /*
 *   shorten-node - A URL Shortening web app
-*    Andrew Kish, 2012-2013
+*    Andrew Kish, 2012-2014
 */
 
 var express = require('express'),
-    // TODO: Update this when consolidate.js gets fixed
-    swig = require('./consolidate-swig').swig, /* Extends dont work correctly in current version of consolidate */
+    cons = require('consolidate'),
     Routes = require('./routes'),
     helenus = require('helenus'),
     cassPool, // Pool of Cassandra connections
     extras = require('express-extras'),
     settings = require('./settings').shorten_settings,
+    lessMiddleware = require("less-middleware"),
     models = require('./settings').models,
+    bunyan = require("bunyan"), log,
     site = module.exports = express();
 
-//We pass Routes our entire app so it has access to the app context
-var routes = new Routes(site);
-
 /*
-*
 **  Configuration
-*
 */
 site.configure(function(){
+    //LESS compiler middleware, if style.css is requested it will automatically compile and return style.less
+    site.use(lessMiddleware({
+        src: __dirname + "/public",
+        compress: true
+    }));
     // Setup swig for Express 3.0 using consolidate, many other templates drop-in-able now!
-    site.engine("html", swig);
+    site.engine("html", cons.swig);
     site.set("view engine", "html");
-    site.set("view options", {layout: false});
     site.set("views", __dirname + "/views");
 
     //The rest of our static-served files
@@ -39,27 +39,34 @@ site.configure(function(){
         urlSec: 1,
         holdTime: 5,
         whitelist: {
-        '127.0.0.1': true
+            '127.0.0.1': true,
+            'localhost': true,
+            '192.168.2.99': true // You'll want to whitelist any testing servers
         }
     }));
     site.use(express.bodyParser()); //Make use of x-www-form-erlencoded and json app-types
     site.use(express.methodOverride()); //Connect alias
-    site.use(site.router);
-    // Use our custom error handler
-    site.use(routes.errorHandler);
+    // Configure logging
+    log = bunyan.createLogger({ name: "shorten-node",
+    streams: [
+    {
+        level: "trace", // Priority of levels looks like this: Trace -> Debug -> Info -> Warn -> Error -> Fatal
+        stream: process.stdout, // Developers will want to see this piped to their consoles
+    }/*,{
+        level: 'warn',
+        stream: new utils(), // looks for 'write' method. https://github.com/trentm/node-bunyan
+    }*/
+    ]});
+    site.set('bunyan', log);
 });
 
 /*
-*
 **  Sever specific configuration
-*
 */
 //Dev mode
 site.configure('dev', function(){
-    require('swig').init({ cache: false, allowErrors: true, root: __dirname + "/views",  filters: {} });
     //Set your domain name for your development environment
     site.set('domain', settings.dev_domain);
-    site.use(express.logger('dev'));
     console.log("Running in dev mode");
     site.set('helenus', helenus);
     cassPool = new helenus.ConnectionPool({
@@ -85,7 +92,6 @@ site.configure('dev', function(){
 });
 //Live deployed mode
 site.configure('live', function(){
-    require('swig').init({ cache: false, allowErrors: false, root: __dirname + "/views",  filters: {} });
     //Set your domain name for the shortener here
     site.set('domain', settings.live_domain);
     site.set('helenus', helenus);
@@ -111,10 +117,15 @@ site.configure('live', function(){
 
 
 /*
-*
 **  Routes/Views
-*
 */
+//We pass Routes our entire app so it has access to the app context
+var routes = new Routes(site);
+// Setup the router
+site.use(site.router);
+// Use our custom error handler
+site.use(routes.errorHandler);
+// Here are all our routes
 site.get('/', routes.index);
 site.get('/developers/', routes.developers);
 site.post('/rpc/setLink', routes.setLink);
@@ -147,9 +158,7 @@ site.all('*', function(req, resp, next){
 });
 
 /*
-*
 **  Server startup
-*
 */
 //Forman will set the proper port for live mode (or set the environment variable PORT yourself), otherwise use port 8888
 var port = process.env.PORT || 8888;

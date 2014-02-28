@@ -8,13 +8,14 @@
 *    Andrew Kish, Feb 2012
 */
 
-var Shorten = require('./shorten'); //Utility functions for shoterner
+var Shorten = require('./shorten'), log; //Utility functions for shoterner
 var sanitize = require('validator').sanitize; //For XSS prevention
 
 //We pass the app context to the shorten utility handlers since it needs access too
 var Routes = function(app){
     this.app = app;
     shorten = new Shorten(app);
+    log = app.get('bunyan');
 };
 
 /*
@@ -151,56 +152,55 @@ Routes.prototype.getLink = function (req, res){
 	}
 };
 
-/*
-* Custom error handler
-*
-*/
+/**
+/* Error handler
+**/
 Routes.prototype.errorHandler = function(err, req, res, next){
-
     if (err.status == 404){
-        console.error(new Date().toLocaleString(), '>> 404 :', req.params[0], ' UA: ', req.headers['user-agent'], 'IP: ', req.ip);
+        log.info("404 :", req.params[0], " UA: ", req.headers["user-agent"], "IP: ", req.ip);
+        res.render("errors/404.html", {
+            http_status: err.status,
+            error: err.name,
+            title: err.message,
+            showStack: err.stack,
+            env: req.app.settings.env,
+            domain: req.app.get("domain")
+        });
     }
 
-    if(!err.name || err.name == 'Error'){
-        console.error(new Date().toLocaleString(), '>>', err);
-        console.log(err.stack);
-
+    if(!err.name || err.name == "Error"){
+        log.error(JSON.stringify(err) + " on " + req.params[0]);
         if(req.xhr){
-            return res.send({ error: 'Internal error' }, 500);
+            return res.send({ error: "Internal error" }, 500);
         }else{
-            return res.render('errors/500.html', {
+            return res.render("errors/500.html", {
                 status: 500,
                 error: err,
-                title: 'Oops! Something went wrong!',
-                devmode: req.app.settings.env,
-                domain: req.app.set('domain')
+                title: "Oops! Something went wrong!",
+                env: req.app.settings.env,
+                domain: req.app.get("domain")
             });
         }
     }
 
-    if(req.xhr){
-        return res.json({ error: err.message, stack: err.stack, allError: err}, 500);
-    }
-
-    if (err.status === undefined){
-        res.render('errors/500.html', {
-            status: err.name,
-            error: err.name,
-            showStack: err.stack,
-            title: err.message,
-            devmode: req.app.settings.env,
-            domain: req.app.set('domain')
-        });
+    if (typeof err === "object"){
+        err.path = req.params ? JSON.stringify(req.params) : "";
+        err.ip = req.ip;
+        err.user_agent = req.headers["user-agent"];
     }else{
-        res.render('errors/' + err.status + '.html', {
-            status: err.status,
-            error: err.name,
-            title: err.message,
-            showStack: err.stack,
-            devmode: req.app.settings.env,
-            domain: req.app.set('domain')
-        });
+        err = err + " on " + req.params[0];
     }
+    
+    log.error(err);
+
+    res.render("errors/500.html", {
+        http_status: 500,
+        error: err.name,
+        showStack: err.stack,
+        title: err.message,
+        env: req.app.settings.env,
+        domain: req.app.get("domain")
+    });
 };
 
 module.exports = Routes;

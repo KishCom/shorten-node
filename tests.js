@@ -6,10 +6,15 @@
 */
 
 var settings = require('./settings').shorten_settings;
-var DEV_SERVER_HOST = "dev.geostuck.com";
-var DEV_SERVER_PORT = "8888";
-var http = require('http');
-var client = http.createClient(DEV_SERVER_PORT, DEV_SERVER_HOST);
+var DEV_SERVER_HOST = "http://" + settings.dev_domain;
+var DEV_SERVER_PORT = process.env.SERVER_PORT || 8888;
+
+//Some tests expect a shortened URL that you know exists in the database
+var TEST_LINK_HASH = 'cxr10s';
+var EXPECTED_ORIGINAL_URL = 'http://reddit.com';
+
+var request = require('request'),
+	async = require('async');
 //Our subjects:
 var Routes = require('./routes');
 var Shorten = require('./shorten');
@@ -100,20 +105,13 @@ exports.A_random_generated_hash_is_made_of_only_numbers_upper_case_and_lower_cas
 
 //API Tests
 exports.server_is_up = function(test){
-	var headers = {
-		'Host': DEV_SERVER_HOST
-	};
-	var request = client.request('GET', '/', headers);
-	request.on('response', function(response){
-		test.ok(response.statusCode == "200", "Server didn't respond with 200 OK. Is it up?");
-		response.on('end', function() {
-			test.done();
-		});
+	request({"uri": DEV_SERVER_HOST}, function(err, http, body){
+		if (err){
+			console.log(err);
+		}
+		test.ok(http.statusCode === 200, "Server didn't respond with 200 OK. Is it up?");
+		test.done();
 	});
-	request.on('error', function(err){
-		console.log(err);
-	});
-	request.end();
 };
 
 exports.setLink_responds_with_expected_json_structure = function(test){
@@ -123,89 +121,93 @@ exports.setLink_responds_with_expected_json_structure = function(test){
 		'Content-Type': 'application/json',
 		'Content-Length': Buffer.byteLength(data,'utf8')
 	};
-	var request = client.request('POST', '/rpc/setLink', headers);
-	request.on('response', function(response){
-		var chunks = "";
-		response.on('data', function(chunk) {
-			chunks += chunk;
+
+	request({	"uri": DEV_SERVER_HOST + '/rpc/setLink',
+				"headers": headers,
+				"method": "POST",
+				"body": data
+			}, function(err, http, body){
+				var chunks;
+				try{
+					chunks = JSON.parse(body);
+				}catch( e ){
+					test.ok(false, JSON.stringify(e));
+					test.done();
+				}
+				test.ok(chunks.shortenError === false, " shorten error: " + chunks.shortenError);
+				test.ok(chunks.alreadyShortened === false || chunks.alreadyShortened === true, " alreadyShortened missing!");
+				test.ok(chunks.originalURL === 'http://google.com', " originalURL doesn't match given originalURL " + chunks.originalURL);
+				var shortTest = new RegExp("^http:\/\/" + settings.dev_domain + "\/[a-zA-Z0-9]{6,32}$");
+				test.ok(shortTest.test(chunks.shortenedURL), " shortenedURL not a " + settings.dev_domain + " url " + chunks.shortenedURL);
+				test.done();
 		});
-		response.on('end', function() {
-			chunks = JSON.parse(chunks);
-			test.ok(chunks.shortenError === false, " shorten error: " + chunks.shortenError);
-			test.ok(chunks.alreadyShortened === false || chunks.alreadyShortened === true, " alreadyShortened missing!");
-			test.ok(chunks.originalURL === 'http://google.com', " originalURL doesn't match given originalURL " + chunks.originalURL);
-			var shortTest = new RegExp("^http:\/\/" + settings.dev_domain + "\/[a-zA-Z0-9]{6,32}$");
-			test.ok(shortTest.test(chunks.shortenedURL), " shortenedURL not a " + settings.dev_domain + " url " + chunks.shortenedURL);
-			test.done();
-		});
-	});
-	request.write(data);
-	request.end();
 };
 
 exports.getLink_responds_with_expected_json_structure = function(test){
-	//This test expects a shortened URL that you know exists in the database
-	var TEST_LINK_HASH = 'mo9742';
-	var EXPECTED_ORIGINAL_URL = 'http://reddit.com';
 	var data = JSON.stringify({ 'shortenedURL': TEST_LINK_HASH });
 	var headers = {
 		'Host': DEV_SERVER_HOST,
 		'Content-Type': 'application/json',
 		'Content-Length': Buffer.byteLength(data,'utf8')
 	};
-	var request = client.request('POST', '/rpc/getLink', headers);
-	request.on('response', function(response){
-		var chunks = "";
-		response.on('data', function(chunk) {
-			chunks += chunk;
-		});
-		response.on('end', function() {
-			chunks = JSON.parse(chunks);
-			test.ok(chunks.originalURL == EXPECTED_ORIGINAL_URL, " originalURL for test shortenedURL (" + TEST_LINK_HASH + ") should be " + EXPECTED_ORIGINAL_URL + " - found: " + chunks.originalURL);
-			test.ok(chunks.linkHash == TEST_LINK_HASH, " linkHash doesn't match TEST_LINK_HASH (" + TEST_LINK_HASH + ") " + chunks.linkHash);
+	request({	"uri": DEV_SERVER_HOST + '/rpc/getLink',
+				"headers": headers,
+				"method": "POST",
+				"body": data
+		}, function(err, http, body){
+			var chunks;
+			try{
+				chunks = JSON.parse(body);
+			}catch( e ){
+				test.ok(false, JSON.stringify(e));
+				test.done();
+			}
+			test.ok(chunks.error === false, "Ensure you have a URL already shortened (and used that short-url) in this instance, and that the link hash and destination are in tests.js. (Currently hash: " + TEST_LINK_HASH + ") should be " + EXPECTED_ORIGINAL_URL + ")");
+			test.ok(chunks.originalURL === EXPECTED_ORIGINAL_URL, " originalURL for test shortenedURL (" + TEST_LINK_HASH + " should be " + EXPECTED_ORIGINAL_URL + " - found: " + chunks.originalURL);
+			test.ok(chunks.linkHash === TEST_LINK_HASH, " linkHash doesn't match TEST_LINK_HASH (" + TEST_LINK_HASH + ") " + chunks.linkHash);
 			test.ok(/^[0-9]+$/.test(chunks.timesUsed) || chunks.timesUsed === null, " timesUsed should be null or integer found: " + chunks.linkHash);
 			test.ok(typeof(chunks.topReferrals) == 'object', " topReferrals should be an object, found: " + chunks.topReferrals);
 			test.ok(typeof(chunks.topUserAgents) == 'object', " topUserAgents should be an object, found: " + chunks.topUserAgents);
-			test.ok(chunks.error === false, " error should be false, this test expects a valid shortenedURL, found: " + chunks.error);
 			test.done();
-		});
 	});
-	request.write(data);
-	request.end();
 };
-//TODO : Fix this test. Breaking because of API throttle
-/*
+
+
 exports.setLink_responds_with_error_given_specifed_URL_examples = function(test){
-	var waitForAllRequests = 0;
-	for (var i = 0; invalidURLs.length > i; i++){
-		//var i = 2;
-		var data = JSON.stringify({ 'originalURL': invalidURLs[i] });
+	var q = async.queue(function (task, callback) {
+		var data = JSON.stringify({ 'originalURL': task.badURL });
 		var headers = {
 			'Host': DEV_SERVER_HOST,
 			'Content-Type': 'application/json',
 			'Content-Length': Buffer.byteLength(data,'utf8')
 		};
-		var request = client.request('POST', '/rpc/setLink', headers);
-		request.on('response', function(response){
-			var chunks = "";
-			response.on('data', function(chunk) {
-				chunks += chunk;
-			});
-			response.on('end', function() {
-				chunks = JSON.parse(chunks);
-				test.ok(chunks.shortenError !== false, " shorten error responded false (not error) " + chunks.shortenError);
-				test.ok(chunks.alreadyShortened === null, " alreadyShortened should be null for url " + invalidURLs[i] + " got " + chunks.alreadyShortened);
-				test.ok(chunks.originalURL !== null, " originalURL doesn't match given originalURL, got:  " + chunks.originalURL);
-				test.ok(chunks.shortenedURL === null, " shortenedURL should be null for url.  got " + chunks.shortenedURL);
-				waitForAllRequests++;
-				if (waitForAllRequests >= invalidURLs.length){
-					test.expect((invalidURLs.length*4)); //Expect 4 * the number of urls we're testing
+		//console.log(data);
+		request({	"uri": DEV_SERVER_HOST + '/rpc/setLink',
+					"headers": headers,
+					"method": "POST",
+					"body": data
+		}, function(err, http, body){
+				var chunks;
+				try{
+					chunks = JSON.parse(body);
+				}catch( e ){
+					test.ok(false, JSON.stringify(e));
 					test.done();
 				}
-			});
+				test.ok(chunks.shortenError !== false, " shorten error responded false (not error) " + chunks.shortenError);
+				test.ok(chunks.alreadyShortened === null, " alreadyShortened should be null got " + chunks.alreadyShortened);
+				test.ok(chunks.originalURL !== null, " originalURL doesn't match given originalURL, got:  " + chunks.originalURL);
+				test.ok(chunks.shortenedURL === null, " shortenedURL should be null for url.  got " + chunks.shortenedURL);
 		});
-		request.write(data);
-		request.end();
+		callback();
+	}, 1);
+
+	// assign a callback to the async/q
+	q.drain = function() {
+		test.done();
+	};
+
+	for (var i = 0; invalidURLs.length > i; i++){
+		q.push({"badURL": invalidURLs[i]});
 	}
 };
-*/
