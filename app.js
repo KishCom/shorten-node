@@ -4,93 +4,103 @@
 */
 
 var express = require('express'),
-    cons = require('consolidate'),
+    nunjucks = require("nunjucks"),
     Routes = require('./routes'),
     mongoose = require('mongoose'),
     Schema = mongoose.Schema,
     extras = require('express-extras'),
+    cookieParser = require("cookie-parser"),
+    bodyParser = require("body-parser"),
+    expressSession = require("express-session"),
     settings = require('./settings').shorten_settings,
     lessMiddleware = require("less-middleware"),
     models = require('./settings').models,
     bunyan = require("bunyan"), log,
     site = module.exports = express();
 
-/*
-**  Configuration
-*/
-site.configure(function(){
-    //LESS compiler middleware, if style.css is requested it will automatically compile and return style.less
-    site.use(lessMiddleware({
-        src: __dirname + "/public",
-        compress: true
-    }));
-    // Setup swig for Express 3.0 using consolidate, many other templates drop-in-able now!
-    site.engine("html", cons.swig);
-    site.set("view engine", "html");
-    site.set("views", __dirname + "/views");
+var NODE_ENV;
+var packagejson = require('./package');
+if (process.env.NODE_ENV === "dev" || process.env.NODE_ENV === "live"){
+    settings.NODE_ENV = process.env.NODE_ENV;
+    settings.appName = packagejson.name;
+    settings.appVersion = packagejson.version;
+    site.locals.settings = settings;
+}else{
+    console.log("Missing NODE_ENV environment variable. Must be set to 'dev' or 'live'.");
+    process.exit();
+}
 
-    //The rest of our static-served files
-    site.use(express.static(__dirname + '/public'));
+//LESS compiler middleware, if style.css is requested it will automatically compile and return style.less
+site.use(lessMiddleware(__dirname + "/public"));
 
-    //Middlewares
-    site.use(extras.fixIP()); //Normalize various IP address sources to be more accurate
-    site.use(extras.throttle({ //Simple throttle to prevent API abuse
-        urlCount: 5,
-        urlSec: 1,
-        holdTime: 5,
-        whitelist: {
-            '127.0.0.1': true,
-            'localhost': true,
-            '192.168.2.99': true // You'll want to whitelist any testing servers
-        }
-    }));
-    site.use(express.bodyParser()); //Make use of x-www-form-erlencoded and json app-types
-    site.use(express.methodOverride()); //Connect alias
-    // Configure logging
-    log = bunyan.createLogger({ name: "shorten-node",
-    streams: [
-    {
-        level: "trace", // Priority of levels looks like this: Trace -> Debug -> Info -> Warn -> Error -> Fatal
-        stream: process.stdout, // Developers will want to see this piped to their consoles
-    }/*,{
-        level: 'warn',
-        stream: new utils(), // looks for 'write' method. https://github.com/trentm/node-bunyan
-    }*/
-    ]});
-    site.set('bunyan', log);
+nunjucks.configure('views', {
+    autoescape: true,
+    express: site
 });
+site.set("view engine", "html");
+site.set("views", __dirname + "/views");
+
+//The rest of our static-served files
+site.use(express.static(__dirname + '/public'));
+
+//Middlewares
+site.use(extras.fixIP()); //Normalize various IP address sources to be more accurate
+site.use(extras.throttle({ //Simple throttle to prevent API abuse
+    urlCount: 5,
+    urlSec: 1,
+    holdTime: 5,
+    whitelist: {
+        '127.0.0.1': true,
+        'localhost': true,
+        '192.168.2.99': true // You'll want to whitelist any testing servers
+    }
+}));
+
+site.use(bodyParser.urlencoded({extended: true}));
+site.use(bodyParser.json());
+site.use(cookieParser());
+site.use(expressSession({   secret: settings.sessionSecret,
+                            key: packagejson.name + ".sid",
+                            saveUninitialized: false,
+                            resave: false,
+                            cookie: {maxAge: new Date(Date.now() + 604800*1000), path: '/', httpOnly: true, secure: false}
+                        }));
+
+// Configure logging
+log = bunyan.createLogger({ name: "shorten-node",
+                            streams: [{
+                                level: "trace", // Priority of levels looks like this: Trace -> Debug -> Info -> Warn -> Error -> Fatal
+                                stream: process.stdout, // Developers will want to see this piped to their consoles
+                            }]});
+site.set('bunyan', log);
 
 /*
 **  Sever specific configuration
 */
 //Dev mode
-site.configure('dev', function(){
+if (settings.NODE_ENV === "dev"){
     //Set your domain name for your development environment
     site.set('domain', settings.dev_domain);
     console.log("Running in dev mode");
     mongoose.connect(settings.dev_mongodb_uri);
     mongoose.model('LinkMaps', models.LinkMaps, 'linkmaps'); //models is pulled in from settings.json
     site.set('mongoose', mongoose);
-});
+}
 //Live deployed mode
-site.configure('live', function(){
+if (settings.NODE_ENV === "live"){
     //Set your domain name for the shortener here
     site.set('domain', settings.live_domain);
     mongoose.connect(settings.live_mongodb_uri === '' ? process.env.MONGOLAB_URI : settings.live_mongodb_uri);
     mongoose.model('LinkMaps', models.LinkMaps, 'linkmaps'); //models is pulled in from settings.json
     site.set('mongoose', mongoose);
-});
-
+}
 
 /*
 **  Routes/Views
 */
 //We pass Routes our entire app so it has access to the app context
 var routes = new Routes(site);
-// Setup the router
-site.use(site.router);
-// Use our custom error handler
-site.use(routes.errorHandler);
+
 // Here are all our routes
 site.get('/', routes.index);
 site.get('/developers/', routes.developers);
@@ -101,6 +111,8 @@ site.get(/^\/([a-zA-Z0-9]{6,32})$/, routes.navLink);
 site.all('*', function(req, resp, next){
     next({name: "NotFound", "message": "Oops! The page you requested doesn't exist","status": 404});
 });
+// Use our custom error handler
+site.use(routes.errorHandler);
 
 /*
 **  Server startup

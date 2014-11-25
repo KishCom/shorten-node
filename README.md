@@ -1,5 +1,5 @@
-    __..         ,                    .    
-    (__ |_  _ ._.-+- _ ._  ___ ._  _  _| _ 
+    __..         ,                    .
+    (__ |_  _ ._.-+- _ ._  ___ ._  _  _| _
     .__)[ )(_)[   | (/,[ )     [ )(_)(_](/,
 
 Shorten-node - A URL Shortener web app written in Node.js, with a MongoDB backend.
@@ -15,22 +15,14 @@ What makes JavaScript development so awesome these days is the massive amount of
 * LessCSS (http://lesscss.org/)
     - Less Elements (http://lesselements.com/)
     - Semantic.gs (http://semantic.gs/)
-* Swig templates (http://paularmstrong.github.com/swig/)
-* EnderJS (http://ender.no.de/)
-	- jeesh (domready, bean, qwery, bonzo) https://github.com/ender-js/jeesh
-	- reqwest (https://github.com/ded/reqwest)
-	- ender-overlay (https://github.com/nemeseri/ender-overlay)
-	- morpheus (https://github.com/ded/morpheus)
-* node-validator (https://github.com/chriso/node-validator)
+* Nunjucks templates (http://paularmstrong.github.com/swig/)
 * nodeunit (https://github.com/caolan/nodeunit)
-* express-extras (https://github.com/davglass/express-extras)
 * ZeroClipboard (http://code.google.com/p/zeroclipboard/)
-* node-ams (https://github.com/kof/node-ams)
 * And Heroku for hosting of course!
 
 Probably also others I'm forgetting. The glue that holds this all together is what I wrote and it's licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php).
 
-The front-end uses the django inspired templates package called swig. An asset manager build script is also included. It uses ams (https://github.com/kof/node-ams). If you plan to make front-end changes make sure to review the documentation there and edit build_assets.js as needed. There are some tests, but it is far from 100% test coverage (more like 20% coverage). Tests are written using nodeunit.
+The front-end uses the django inspired templates package called [nunjucks](https://mozilla.github.io/nunjucks/). An asset manager build script is also included. It uses grunt (http://gruntjs.com/). If you plan to make front-end changes make sure to review the documentation there and run the Gruntfile as needed. There are some tests, but it is far from 100% test coverage (more like 20% coverage). Tests are written using nodeunit.
 
 A note on [web scale](http://mongodb-is-web-scale.com/): The way this is configured to work with MongoDB is that all logs for a given shortened URL live in the same single MongoDB document. For this simple project it's fine. However, if for some reason this project were to be deployed on a very large scale, things would break down quite quickly. Mainly: the size of a single shortened URL document from MongoDB could aquire enough log entries to exceed [MongoDB document limit size](http://www.mongodb.org/display/DOCS/Documents#Documents-MaximumDocumentSize) - and things would be very slow as it approched this limit. While I don't have benchmarks, I'm sure for a dozen or so users using normal volumed twitter accounts, it's more than adequate (at least a few thousand uses/logs per hash before you even need to start to thinking about this).
 
@@ -52,7 +44,7 @@ Copy and setup local settings:
 
 Launch a dev server
 
-    NODE_ENV=dev nodemon app.js | bunyan
+    npm start
 
 The shortener will be available at http://localhost:8888/
 
@@ -68,12 +60,11 @@ After that you can run the tests like this (make sure your server is running!):
 
 Rebuild assets and launch a live server:
 
-    node build_assets.js
-    NODE_ENV=live node app.js 
+    grunt
+    NODE_ENV=live node app.js
 
 
 ## To deploy to live using Heroku:
-
 
 Make sure you're in the shortening apps git repo directory, or clone it from somewhere else
 

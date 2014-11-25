@@ -1,6 +1,8 @@
 /* Kish.cm Node.js powered URL Shortener */
-var Shorten = function(app){
-    this.app = app;
+var app = false;
+var Shorten = function(parentapp){
+    this.app = parentapp;
+    app = parentapp;
     var settings = require('./settings').shorten_settings;
     if (this.app === undefined){ //for tests
         //Assume a dev server
@@ -25,7 +27,7 @@ var Shorten = function(app){
 */
 Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
     //console.log("Looking up linkhash: " + linkHash);
-    var mongoose = this.app.locals.settings.mongoose;
+    var mongoose = app.get('mongoose');
     var dbCursor = mongoose.model('LinkMaps');
     dbCursor.find({"linkHash": linkHash}, function(err, results){
         if (err === null){
@@ -62,8 +64,8 @@ Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
 */
 Shorten.prototype.addNewShortenLink = function(originalURL, callback){
     var that = this; //Grab this context for after we make a DB query
-    var mongoose = this.app.locals.settings.mongoose;
-    
+    var mongoose = app.get('mongoose');
+
     var newHash = that.genHash(function(newHash){
         var dbCursor = mongoose.model('LinkMaps');
         dbCursor = new dbCursor({linkDestination: originalURL, linkHash: newHash, timestamp: new Date() });
@@ -97,7 +99,7 @@ Shorten.prototype.addNewShortenLink = function(originalURL, callback){
 *            }
 */
 Shorten.prototype.originalURLLookUp = function (originalURL, callback){
-    var mongoose = this.app.locals.settings.mongoose;
+    var mongoose = app.get('mongoose');
     var dbCursor = mongoose.model('LinkMaps');
     dbCursor.find({"linkDestination": originalURL}, function(err, results){
         if (err === null){
@@ -142,7 +144,7 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
     // Strip domain and slashes
     shortenedURL = shortenedURL.replace("http://" + this.app.settings.domain + "/", "");
     //console.log("Looking up stats for: " + shortenedURL);
-    var mongoose = this.app.locals.settings.mongoose;
+    var mongoose = app.get('mongoose');
     var dbCursor = mongoose.model('LinkMaps');
     // We need the link_id, look up the shortened URL first. This is an artifact of being ported over from an ancient PHP app. Will be revised when moving databases
     dbCursor.find({"linkHash": shortenedURL}, function(err, results){
@@ -219,7 +221,7 @@ Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, call
                                'topUserAgents': [],
                                'error' : false
                            };
-    
+
     // Get the top 10 useragents and referrers
     var knownAgents = [], knownReferrals = [];
     for (var i = 0; resultSet.length > i; i++){
@@ -235,7 +237,7 @@ Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, call
             knownAgents.push({'userAgent': resultSet[i].userAgent, 'agentCount': 1});
         }
         found = false;
-        
+
         // Check known referrers for this result
         for (var b = 0; knownReferrals.length > b; b++){
             if (knownReferrals[b].referrer == resultSet[i].referrer){
@@ -286,9 +288,9 @@ Shorten.prototype.genHash = function(callback){
         }
         newHash = newHash + digit;
     }
-    
+
     if (this.app !== undefined){ // Tests don't need to check the database - TODO add a new node_env variable/state: test
-        var mongoose = this.app.locals.settings.mongoose;
+        var mongoose = app.get('mongoose');
         var dbCursor = mongoose.model('LinkMaps');
         dbCursor.find({"linkHash": newHash}, function(err, results){
             if (err !== null){

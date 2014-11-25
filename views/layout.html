@@ -8,9 +8,7 @@
     {% if devmode == "dev" %}
     <link rel="stylesheet" href="/media/css/style.css">
     <!--[if lt IE 9]><script type="text/javascript" src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-    <script type="text/javascript" src="/media/js/ender.min.js"></script>
-    <script type="text/javascript" src="/media/js/shorten.js"></script>
-    <script type="text/javascript" src="/media/js/zeroclipboard/ZeroClipboard.js"></script>
+    <script type="text/javascript" src="/media/js/shorten_concat.js"></script>
     {% else %}
     <link rel="stylesheet" type="text/css" href="/media/shorten.min.css">
     <!--[if lt IE 9]><script type="text/javascript" src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
@@ -18,7 +16,7 @@
     {% endif %}
 </head>
 
-<body>  
+<body>
     <header id="header"><h1>{% block title %}{% endblock %}</h1></header>
     <div id="content">
         {% block content %}{% endblock %}

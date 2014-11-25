@@ -5,11 +5,13 @@
 *     - index, and developer (static pages)
 *     - navLink, setLink, and getLink
 *
-*    Andrew Kish, Feb 2012
+*    Andrew Kish, Feb 2012 - Dec 2014
 */
 
 var Shorten = require('./shorten'), log; //Utility functions for shoterner
-var sanitize = require('validator').sanitize; //For XSS prevention
+var sanitize = require('sanitize-caja'); //For XSS prevention
+var accepts = require('accepts');
+var escapeHtml = require('escape-html');
 
 //We pass the app context to the shorten utility handlers since it needs access too
 var Routes = function(app){
@@ -36,18 +38,17 @@ Routes.prototype.developers = function (req, res){
 *    ALSO: Logs link navigation for stats
 */
 Routes.prototype.navLink = function (req, res){
-    var linkHash = req.route.params[0];
+    var linkHash = req.params[0];
     //Is the linkHash ONLY alphanumeric and between 6-32 characters?
     if (shorten.isValidLinkHash(linkHash)){
-
         //Gather and clean the data required for logging this hash
         var ipaddress = req.connection.remoteAddress === undefined ? "0.0.0.0" : req.connection.remoteAddress;
         var referrer = req.header('Referrer') === undefined ? "" : req.header('Referrer');
         var userAgent = req.headers['user-agent'] === undefined ? "" : req.headers['user-agent'];
         //Here is the actual object that we will pass to the logger
-        var userInfo = {'ip'       : sanitize(ipaddress).xss(),
-                        'userAgent': sanitize(userAgent).xss(),
-                        'referrer' : sanitize(referrer).xss() };
+        var userInfo = {'ip'       : sanitize(ipaddress),
+                        'userAgent': sanitize(userAgent),
+                        'referrer' : sanitize(referrer) };
 
         //Do we have that URL? If so, log it and send them
         shorten.linkHashLookUp(linkHash, userInfo, function(linkInfo, dbCursor){
@@ -56,7 +57,7 @@ Routes.prototype.navLink = function (req, res){
                 //console.log("Linking user to: " + linkInfo.linkDestination);
                 res.redirect(linkInfo.linkDestination);
             }else{
-                linkHash = sanitize(linkHash).xss();
+                linkHash = sanitize(linkHash);
                 res.render('index', {errorMessage: 'No such link shortened with hash: \'' + linkHash + '\''});
             }
         });
@@ -89,7 +90,7 @@ Routes.prototype.setLink = function (req, res){
         //Didn't find a prefix? Just assume http://
         shortenURL = "http://"+shortenURL;
     }
-    
+
     //This is the URL we're shortening
     shortened.originalURL = shortenURL;
 
@@ -156,51 +157,66 @@ Routes.prototype.getLink = function (req, res){
 /* Error handler
 **/
 Routes.prototype.errorHandler = function(err, req, res, next){
-    if (err.status == 404){
-        log.info("404 :", req.params[0], " UA: ", req.headers["user-agent"], "IP: ", req.ip);
-        res.render("errors/404.html", {
-            http_status: err.status,
-            error: err.name,
-            title: err.message,
-            showStack: err.stack,
-            env: req.app.settings.env,
-            domain: req.app.get("domain")
-        });
+    var env = process.env.NODE_ENV;
+    // respect err.status
+    if (err.status) {
+        res.statusCode = err.status;
+    }
+    // default status code to 500
+    if (res.statusCode < 400) {
+        res.statusCode = 500;
     }
 
-    if(!err.name || err.name == "Error"){
-        log.error(JSON.stringify(err) + " on " + req.params[0]);
-        if(req.xhr){
-            return res.send({ error: "Internal error" }, 500);
-        }else{
-            return res.render("errors/500.html", {
-                status: 500,
-                error: err,
-                title: "Oops! Something went wrong!",
-                env: req.app.settings.env,
-                domain: req.app.get("domain")
-            });
+    // write error to console
+    if (env !== 'test') {
+        if (res.statusCode !== 404){
+            log.error(err.stack || JSON.stringify(err));
         }
     }
 
-    if (typeof err === "object"){
-        err.path = req.params ? JSON.stringify(req.params) : "";
-        err.ip = req.ip;
-        err.user_agent = req.headers["user-agent"];
-    }else{
-        err = err + " on " + req.params[0];
+    // cannot actually respond
+    if (res._header) {
+        return req.socket.destroy();
     }
-    
-    log.error(err);
 
-    res.render("errors/500.html", {
-        http_status: 500,
-        error: err.name,
-        showStack: err.stack,
-        title: err.message,
-        env: req.app.settings.env,
-        domain: req.app.get("domain")
-    });
+    // negotiate
+    var accept = accepts(req);
+    var type = accept.types('html', 'json', 'text');
+
+    // Security header for content sniffing
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+
+    // html
+    if (type === 'html') {
+        if (res.statusCode == 404){
+            log.info("404 :", req.url, " UA: ", req.headers["user-agent"], "IP: ", req.ip);
+            return res.render("errors/404.html", {
+                http_status: res.statusCode,
+                "env": env
+            });
+        }else{
+            var stack = (err.stack || '').split('\n').slice(1).map(function(v){ return '<li>' + escapeHtml(v).replace(/  /g, ' &nbsp;') + '</li>'; }).join('');
+            res.render('errors/500.html',{
+                http_status: res.statusCode,
+                error: String(err).replace(/  /g, ' &nbsp;').replace(/\n/g, '<br>'),
+                showStack: stack,
+                "env": env
+            });
+        }
+    // json
+    } else if (type === 'json') {
+        var error = { error: true, message: err.message, stack: err.stack };
+        for (var prop in err){
+            error[prop] = err[prop];
+        }
+        var json = JSON.stringify(error);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(json);
+    // plain text
+    } else {
+        res.setHeader('Content-Type', 'text/plain');
+        res.end(err.stack || String(err));
+    }
 };
 
 module.exports = Routes;

@@ -10,7 +10,7 @@ var DEV_SERVER_HOST = "http://" + settings.dev_domain;
 var DEV_SERVER_PORT = process.env.SERVER_PORT || 8888;
 
 //Some tests expect a shortened URL that you know exists in the database
-var TEST_LINK_HASH = 'cxr10s';
+var TEST_LINK_HASH = 'twthoe';
 var EXPECTED_ORIGINAL_URL = 'http://reddit.com';
 
 var request = require('request'),

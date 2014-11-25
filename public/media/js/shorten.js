@@ -42,6 +42,7 @@ $(document).ready(function(){
     $("#getStatsSubmitBtn").click(function(){
         var shortenedURL = $("#shortenedURL").val();
         var regex = new RegExp("^http:\/\/" + domain + "\/[a-zA-Z0-9]{6,32}$");
+        var fullLink = "";
         if (regex.test(shortenedURL)){
             $.ajax({
                 url: "/rpc/getLink",
@@ -53,7 +54,7 @@ $(document).ready(function(){
                         $("#statsError").html("");
                         $(".addedIn").remove();
                         //Populate and display stats
-                        var fullLink = "http://" + domain + "/" + res.linkHash;
+                        fullLink = "http://" + domain + "/" + res.linkHash;
                         $("#StatsTitle").attr("href", fullLink);
                         $("#StatsTitle").html(fullLink);
 
@@ -62,10 +63,11 @@ $(document).ready(function(){
                         var niceDate = new Date(res.dateShortened).toLocaleString();
                         $("#dateShortened").html(niceDate);
                         var appendMe = "";
+                        var odd = "";
                         if (res.topUserAgents.length > 0){
                             for (var i = 0; res.topUserAgents.length > i; i++){
-                                var odd = "";
-                                if (i % 2 == 0){
+                                odd = "";
+                                if (i % 2 === 0){
                                     odd = "odd";
                                 }
                                 appendMe += "<tr class=\"" + odd + " addedIn\"><td>" + res.topUserAgents[i].userAgent + "</td><td class=\"tableCount\">" + res.topUserAgents[i].agentCount + "</td></tr>";
@@ -76,11 +78,11 @@ $(document).ready(function(){
                         if (res.topReferrals.length > 0){
                             appendMe = "";
                             for (var a = 0; res.topReferrals.length > a; a++){
-                                var odd = "";
-                                if (a % 2 == 0){
+                                odd = "";
+                                if (a % 2 === 0){
                                     odd = "odd";
                                 }
-                                if (res.topReferrals[a].referrer == ""){
+                                if (!res.topReferrals[a].referrer){
                                     referrer = "&lt;none&gt;";
                                 }else{
                                     referrer = res.topReferrals[a].referrer;
@@ -94,7 +96,7 @@ $(document).ready(function(){
                     }else{
                         $("#statsError").html(res.error);
                         if (res.linkHash !== "" && res.originalURL !== ""){
-                            var fullLink = "http://" + domain + "/" + res.linkHash;
+                            fullLink = "http://" + domain + "/" + res.linkHash;
                             $("#StatsTitle").attr("href", fullLink);
                             $("#StatsTitle").html(fullLink);
                             $("#StatsOriginalURL").val(res.originalURL);
@@ -113,21 +115,21 @@ $(document).ready(function(){
         }
     });
 
-    $("#liveCopyToClip").listen("click", function(){
+    $("#liveCopyToClip").on("click", function(){
         clip.setText($("#liveSelect").val());
         clip.glue("liveCopyToClip");
         $("#liveCopyToClip").html("Once more");
         clip.addEventListener('complete', function() {
-            
+
             $("#liveCopyToClip").html("Copied");
             setTimeout("$('#liveCopyToClip').html('Click To Copy');", 2000);
         });
     });
 
-    $("#liveSelect").listen("click", function(){
+    $("#liveSelect").on("click", function(){
         $("#liveSelect")[0].select();
     });
-    $("#shortenedURL").listen("click", function(){
+    $("#shortenedURL").on("click", function(){
         $("#shortenedURL")[0].select();
     });
     $("#Modal").overlay({
@@ -159,7 +161,7 @@ function isURL(testURL) {
     var alreadyShortTest = new RegExp("^http:\/\/" + domain + "\/[a-zA-Z0-9]+$");
     if (alreadyShortTest.test(testURL) === false){
         var mainURLTest = /^(https?):\/\/((?:[a-z0-9.-]|%[0-9A-F]{2}){3,})(?::(\d+))?((?:\/(?:[a-z0-9-._~!$&'()*+,;=:@]|%[0-9A-F]{2})*)*)(?:\?((?:[a-z0-9-._~!$&'()*+,;=:\/?@]|%[0-9A-F]{2})*))?(?:#((?:[a-z0-9-._~!$&'()*+,;=:\/?@]|%[0-9A-F]{2})*))?$/i;
-        return mainURLTest.test(testURL);   
+        return mainURLTest.test(testURL);
     }else{
         return false;
     }
