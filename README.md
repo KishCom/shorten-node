@@ -15,7 +15,7 @@ What makes JavaScript development so awesome these days is the massive amount of
 * LessCSS (http://lesscss.org/)
     - Less Elements (http://lesselements.com/)
     - Semantic.gs (http://semantic.gs/)
-* Nunjucks templates (http://paularmstrong.github.com/swig/)
+* Nunjucks templates (https://mozilla.github.io/nunjucks/)
 * nodeunit (https://github.com/caolan/nodeunit)
 * ZeroClipboard (http://code.google.com/p/zeroclipboard/)
 * And Heroku for hosting of course!
@@ -35,6 +35,7 @@ Install dependencies
     npm install
     npm install -g bunyan
     npm install -g nodemon
+    npm install -g grunt-cli
 
 Copy and setup local settings:
 
@@ -44,6 +45,7 @@ Copy and setup local settings:
 
 Launch a dev server
 
+    grunt
     npm start
 
 The shortener will be available at http://localhost:8888/
@@ -89,7 +91,7 @@ I used MongoLabs addon from Heroku: https://addons.heroku.com/mongolab but any M
 
 Make sure assets are compiled properly
 
-    node build_assets.js
+    grunt
 
 Don't forget to commit your changes
 
