@@ -6,26 +6,26 @@
     "start": "clear;NODE_ENV=dev nodemon app.js | bunyan"
   },
   "engines": {
-    "node": "0.10.x"
+    "node": "4.2.x"
   },
-  "version": "1.12.0",
+  "version": "1.12.1",
   "dependencies": {
-    "accepts": "1.1.x",
-    "body-parser": "1.9.x",
-    "bunyan": "1.2.x",
-    "cookie-parser": "1.3.x",
+    "accepts": "1.3.x",
+    "body-parser": "1.14.x",
+    "bunyan": "1.5.x",
+    "cookie-parser": "1.4.x",
     "escape-html": "1.0.x",
-    "express": "4.10.x",
+    "express": "4.13.x",
     "express-extras": "0.3.x",
-    "express-session": "1.9.x",
-    "less": "2.1.x",
-    "less-middleware": "1.0.x",
-    "mongoose": "3.8.x",
-    "multer": "0.1.x",
+    "express-session": "1.13.x",
+    "less": "2.5.x",
+    "less-middleware": "2.0.x",
+    "mongoose": "4.3.x",
+    "multer": "1.1.x",
     "nodeunit": "0.7.x",
-    "nunjucks": "1.1.x",
+    "nunjucks": "2.3.x",
     "sanitize-caja": "0.1.x",
-    "validator": "3.22.x"
+    "validator": "4.5.x"
   },
   "devDependencies": {
     "nodeunit": "latest",
@@ -33,8 +33,8 @@
     "async": "latest",
     "grunt": "~0.4.x",
     "grunt-contrib-concat": "~0.5.x",
-    "grunt-contrib-less": "~0.12.x",
-    "grunt-contrib-uglify": "~0.6.x",
+    "grunt-contrib-less": "~1.1.x",
+    "grunt-contrib-uglify": "~0.11.x",
     "grunt-contrib-watch": "~0.6.x",
     "grunt-git-describe": "~2.3.x"
   }
