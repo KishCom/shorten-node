@@ -23,7 +23,7 @@
     "mongoose": "4.3.x",
     "multer": "1.1.x",
     "nodeunit": "0.7.x",
-    "nunjucks": "2.3.x",
+    "nunjucks": "^2.3.4",
     "sanitize-caja": "0.1.x",
     "validator": "4.5.x"
   },
