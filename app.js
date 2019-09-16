@@ -97,7 +97,7 @@ if (settings.NODE_ENV === "dev"){
 }else if (settings.NODE_ENV === "live"){
     //Set your domain name for the shortener here
     site.set('domain', settings.live_domain);
-    mongoose.connect(settings.live_mongodb_uri === '' ? process.env.MONGOLAB_URI : settings.live_mongodb_uri, {useNewUrlParser: true, useUnifiedTopology: true});
+    mongoose.connect(settings.live_mongodb_uri === '' ? process.env.MONGODB_URI : settings.live_mongodb_uri, {useNewUrlParser: true, useUnifiedTopology: true});
 }else{
     log.fatal("NODE_ENV not set, or not set properly.");
     process.end(-1);

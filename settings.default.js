@@ -3,7 +3,7 @@ exports.shorten_settings = {
     live_domain: 'shrt.url', // Live domain
     dev_mongodb_uri: 'mongodb://localhost/shorten-node-dev',
     test_mongodb_uri: 'mongodb://localhost/shorten-node-test',
-    live_mongodb_uri: '', // Leave blank to automatically pickup MONGOLAB_URI
+    live_mongodb_uri: '', // Leave blank to automatically pickup MONGODB_URI
     sessionSecret: 'somekindarandomstringyoumakeup'
 };
 
