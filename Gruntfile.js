@@ -4,8 +4,9 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-git-describe');
     var localpackage = grunt.file.readJSON('package.json');
-
     grunt.initConfig({
+        gitRevisionSHA: 'master',
+        gitRevisionDirty: 'clean',
         localpackage: grunt.file.readJSON('package.json'),
         concat: {
             options: {
@@ -24,7 +25,7 @@ module.exports = function(grunt) {
         uglify: {
             options: {
                 banner: "/**\n"+
-                        "<%= localpackage.name %> - <%= gitRevisionSHA ? gitRevisionSHA : 'master'  %><%= gitRevisionDirty ? gitRevisionDirty : 'clean' %>\n" +
+                        "<%= localpackage.name %> - <%= gitRevisionSHA %><%= gitRevisionDirty %>\n" +
                         "<%= localpackage.description %>\n" +
                         "JavaScript minified on <%= grunt.template.today('dddd, mmmm dS, yyyy, h:MM:ss TT') %>\n" +
                         "**/\n",
