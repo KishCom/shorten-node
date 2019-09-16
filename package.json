@@ -6,7 +6,7 @@
     "start": "grunt; cross-env NODE_ENV=dev nodemon app.js | bunyan",
     "start.live": "grunt; cross-env NODE_ENV=live node app.js | bunyan",
     "test": "grunt; cross-env NODE_ENV=test mocha tests.js -b -s 200 -t 10000 --exit | bunyan",
-    "postinstall": "grunt"
+    "postinstall": "grunt live"
   },
   "engines": {
     "node": "10.x.x"

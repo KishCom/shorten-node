@@ -24,7 +24,7 @@ module.exports = function(grunt) {
         uglify: {
             options: {
                 banner: "/**\n"+
-                        "<%= localpackage.name %> - <%= gitRevisionSHA %><%= gitRevisionDirty %>\n" +
+                        "<%= localpackage.name %> - <%= gitRevisionSHA ? gitRevisionSHA : 'master'  %><%= gitRevisionDirty ? gitRevisionDirty : 'clean' %>\n" +
                         "<%= localpackage.description %>\n" +
                         "JavaScript minified on <%= grunt.template.today('dddd, mmmm dS, yyyy, h:MM:ss TT') %>\n" +
                         "**/\n",

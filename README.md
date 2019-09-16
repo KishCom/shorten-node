@@ -88,11 +88,6 @@ Make sure assets are compile properly
 
     grunt
 
-Finally commit your changes
-
-    git add settings.js
-    git commit -am "Updated my MongoDB URIs and rebuilt assets."
-
 If you use MongoLab addon ([free teir available](https://addons.heroku.com/mongolab#sandbox)), leave the `live_mongodb_uri` in `settings.js` as an empty string -- it will be picked up by shorten-node automatically. Using other services you can get the proper URI info by listing the config (replace 'supertestshorten' with your app name) -- you will need to populate `live_mongodb_uri` in `settings.js` manually.
 Once you've got your mongodb and domain settings changed, add it to your repo and commit the changes.
 
@@ -106,7 +101,8 @@ You should see: "NODE_ENV => live" part of the output of this command (replacing
 
 You're probably not going to want to use their placeholder domain. Replace kish.cm with the domain of your shortener (and [set your domain up to point to this app properly](https://devcenter.heroku.com/articles/custom-domains))
 
-    heroku domains:add kish.cm
+    # Skip this step if you don't want to use the default heroku domain: supertestshorten.herokuapp.com
+    heroku domains:add yourawesomedomain.com
 
 Finally, push the repo to heroku, if everything is working your app is now deployed and live!
 
