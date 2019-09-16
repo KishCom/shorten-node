@@ -5,10 +5,10 @@
 *     - index, and developer (static pages)
 *     - navLink, setLink, and getLink
 *
-*    Andrew Kish, Feb 2012 - Dec 2014
+*    Andrew Kish, Feb 2012 - Dec 2014 - Sept 2019
 */
 
-var Shorten = require('./shorten'), log; //Utility functions for shoterner
+var Shorten = require('./shorten'), shorten, log; //Utility functions for shoterner
 var sanitize = require('sanitize-caja'); //For XSS prevention
 var accepts = require('accepts');
 var escapeHtml = require('escape-html');
@@ -33,7 +33,7 @@ Routes.prototype.developers = function (req, res){
 
 /*
 *    Navigate to a shortened link
-*     Accepts a 6-32 alphanumeric get request: (http://kish.cm/{thisText})
+*     Accepts a 6-32 alphanumeric get request: (http://srtlnk.com/{thisText})
 *     Returns 302 redirect to either the original URL or back to homepage with an error
 *    ALSO: Logs link navigation for stats
 */
@@ -42,13 +42,15 @@ Routes.prototype.navLink = function (req, res){
     //Is the linkHash ONLY alphanumeric and between 6-32 characters?
     if (shorten.isValidLinkHash(linkHash)){
         //Gather and clean the data required for logging this hash
-        var ipaddress = req.connection.remoteAddress === undefined ? "0.0.0.0" : req.connection.remoteAddress;
-        var referrer = req.header('Referrer') === undefined ? "" : req.header('Referrer');
-        var userAgent = req.headers['user-agent'] === undefined ? "" : req.headers['user-agent'];
+        var ipaddress = req.connection.remoteAddress ? "0.0.0.0" : req.connection.remoteAddress;
+        var referrer = req.header('Referrer') ? "" : req.header('Referrer');
+        var userAgent = req.headers['user-agent'] ? "" : req.headers['user-agent'];
         //Here is the actual object that we will pass to the logger
-        var userInfo = {'ip'       : sanitize(ipaddress),
-                        'userAgent': sanitize(userAgent),
-                        'referrer' : sanitize(referrer) };
+        var userInfo = {
+            'ip'       : sanitize(ipaddress),
+            'userAgent': sanitize(userAgent),
+            'referrer' : sanitize(referrer)
+        };
 
         //Do we have that URL? If so, log it and send them
         shorten.linkHashLookUp(linkHash, userInfo, function(linkInfo, dbCursor){
@@ -69,7 +71,7 @@ Routes.prototype.navLink = function (req, res){
 * Set a new shortened link
 *    Accepts a form-POST'd "originalURL" - the URL the user wants shortened.
 *    Returns a json object with the shortened link information that looks like this:
-*    {shortenError: false, alreadyShortened: false, originalURL: "http://derp.net", shortenedURL: "http://kish.cm/xxxxxx"}
+*    {shortenError: false, alreadyShortened: false, originalURL: "http://derp.net", shortenedURL: "http://srtlnk.com/xxxxxx"}
 *
 */
 Routes.prototype.setLink = function (req, res){
@@ -81,79 +83,80 @@ Routes.prototype.setLink = function (req, res){
         originalURL: null, //the url we shortened
         shortenedURL: null //the full shortlink, including http://
     };
-    if (shortenURL === undefined){
-        shortenURL = ""; //empty or invalid POST variable
+    if (!shortenURL){
+        return res.status(400).json({"error": "Missing shortenedURL"});
     }
     //Make sure prefix is good
     var httpSearch = shortenURL.search(/^(ftp|http|https):\/\//);
-    if (httpSearch == -1){
-        //Didn't find a prefix? Just assume http://
-        shortenURL = "http://"+shortenURL;
+    if (httpSearch === -1){
+        //Didn't find a prefix? Assume https://
+        shortenURL = "https://"+shortenURL;
     }
 
     //This is the URL we're shortening
     shortened.originalURL = shortenURL;
 
     //Make sure link mostly looks like a URL
-    if (shorten.isURL(shortenURL)){
-        //Check to make sure we haven't already shortened this url
-        shorten.originalURLLookUp(shortenURL, function(originalURLCheck){
-           if (originalURLCheck === false){
-                //Add to db
-                shorten.addNewShortenLink(shortenURL, function(shortURL){
-                    shortened.shortenedURL = "http://" + domain + "/" + shortURL.linkHash;
-                    shortened.shortenError = false;
-                    shortened.alreadyShortened = false;
-                    res.json(shortened);
-                });
-            }else{
-                //Give them the old hash
-                shortened.shortenedURL = "http://" + domain + "/" + originalURLCheck.linkHash;
-                shortened.shortenError = false;
-                shortened.alreadyShortened = true;
-                res.json(shortened);
-            }
-        });
-    }else{
+    if (shorten.isURL(shortenURL) === false){
         //Throw an error - not a real or supported URI
+        log.debug(`Invalid or unsupported URI: ${shortenURL}`);
         shortened.shortenError = "Invalid or unsupported URI";
-        res.json(shortened);
+        res.status(400).json(shortened);
     }
+    //Check to make sure we haven't already shortened this url
+    shorten.originalURLLookUp(shortenURL, function(originalURLCheck){
+        if (originalURLCheck === false){
+            //Add to db
+            shorten.addNewShortenLink(shortenURL, function(shortURL){
+                shortened.shortenedURL = "http://" + domain + "/" + shortURL.linkHash;
+                shortened.shortenError = false;
+                shortened.alreadyShortened = false;
+                res.json(shortened);
+            });
+        }else{
+            //Give them the old hash
+            shortened.shortenedURL = "http://" + domain + "/" + originalURLCheck.linkHash;
+            shortened.shortenError = false;
+            shortened.alreadyShortened = true;
+            res.json(shortened);
+        }
+    });
 };
 
 /*
 *
 * Get info about a shortened link
-*    Accepts a known short link form-POST'd "shortened_url" - eg ("http://kish.cm/yyyxxx")
+*    Accepts a known short link form-POST'd "shortened_url" - eg ("http://srtlnk.com/yyyxxx")
 *     Returns a json object with detailed stats and information
 *
 */
 Routes.prototype.getLink = function (req, res){
-	var shortenedURL = req.body.shortenedURL;
+    var shortenedURL = req.body.shortenedURL;
     //Strip domain
     shortenedURL = shortenedURL.replace("http://" + req.app.set('domain') + "/", "");
-	if (shorten.isValidLinkHash(shortenedURL)){
+    if (shorten.isValidLinkHash(shortenedURL)){
         //Get stats
-		shorten.shortenedURLStats(shortenedURL, function(linkStats){
+        shorten.shortenedURLStats(shortenedURL, function(linkStats){
             //console.log("link stats");
             //console.log(linkStats);
-			res.json(linkStats);
-		});
-	}else{
-		//404 - no shortlink found with that hash
-        var errorResponse ={'originalURL': null,
-                            'linkHash': null,
-                            'timesUsed': null,
-                            'lastUse': null,
-                            'topReferrals': {},
-                            'topUserAgents':{},
-                            'error': 'Not a Kish.cm URL, or not a valid shortened hash'
-                            };
-		res.json(errorResponse);
-	}
+            res.json(linkStats);
+        });
+    }else{
+        //404 - no shortlink found with that hash
+        var errorResponse ={
+            'originalURL': null,
+            'linkHash': null,
+            'timesUsed': null,
+            'lastUse': null,
+            'topReferrals': {},
+            'topUserAgents':{},
+            'error': 'Not a URL we know, or not a valid shortened hash'
+        };
+        res.status(404).json(errorResponse);
+    }
 };
 
-/**
+/*
 /* Error handler
 **/
 Routes.prototype.errorHandler = function(err, req, res, next){
@@ -188,26 +191,27 @@ Routes.prototype.errorHandler = function(err, req, res, next){
 
     // html
     if (type === 'html') {
-        if (res.statusCode == 404){
+        if (res.statusCode === 404){
             log.info("404 :", req.url, " UA: ", req.headers["user-agent"], "IP: ", req.ip);
             return res.render("errors/404.html", {
-                http_status: res.statusCode,
-                "env": env
-            });
-        }else{
-            var stack = (err.stack || '').split('\n').slice(1).map(function(v){ return '<li>' + escapeHtml(v).replace(/  /g, ' &nbsp;') + '</li>'; }).join('');
-            res.render('errors/500.html',{
-                http_status: res.statusCode,
-                error: String(err).replace(/  /g, ' &nbsp;').replace(/\n/g, '<br>'),
-                showStack: stack,
-                "env": env
+                "http_status": res.statusCode,
+                env
             });
         }
+        var stack = (err.stack || '').split('\n').slice(1).map(function(v){ return '<li>' + escapeHtml(v).replace(/  /g, ' &nbsp;') + '</li>'; }).join('');
+        res.render('errors/500.html', {
+            "http_status": res.statusCode,
+            error: String(err).replace(/  /g, ' &nbsp;').replace(/\n/g, '<br>'),
+            showStack: stack,
+            env
+        });
     // json
     } else if (type === 'json') {
-        var error = { error: true, message: err.message, stack: err.stack };
+        var error = {error: true, message: err.message, stack: err.stack};
         for (var prop in err){
-            error[prop] = err[prop];
+            if (err[prop]){
+                error[prop] = err[prop];
+            }
         }
         var json = JSON.stringify(error);
         res.setHeader('Content-Type', 'application/json');

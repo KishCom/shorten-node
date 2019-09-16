@@ -185,14 +185,14 @@ th {
 }
 #StatsOriginalURL {
   font-family: 'PTSans-Bold', sans-serif;
-  font-size: 1.0em;
+  font-size: 1em;
   margin: 5px 0;
   clear: both;
   float: left;
   width: 100%;
 }
 th {
-  font-size: 1.0em;
+  font-size: 1em;
 }
 .odd {
   background: #FFF;

@@ -17,7 +17,7 @@ What makes JavaScript development so awesome these days is the massive amount of
     - Semantic.gs (http://semantic.gs/)
 * Nunjucks templates (https://mozilla.github.io/nunjucks/)
 * nodeunit (https://github.com/caolan/nodeunit)
-* ZeroClipboard (http://code.google.com/p/zeroclipboard/)
+* Clipboard.js (https://clipboardjs.com/)
 * And Heroku for hosting of course!
 
 Probably also others I'm forgetting. The glue that holds this all together is what I wrote and it's licensed under the MIT license (http://www.opensource.org/licenses/mit-license.php).
@@ -33,9 +33,6 @@ Edit settings.js to match your development and live configurations. You'll need 
 Install dependencies
 
     npm install
-    npm install -g bunyan
-    npm install -g nodemon
-    npm install -g grunt-cli
 
 Copy and setup local settings:
 
@@ -45,25 +42,20 @@ Copy and setup local settings:
 
 Launch a dev server
 
-    grunt
     npm start
 
 The shortener will be available at http://localhost:8888/
 
-Tests will only pass after shorten a URL and define `TEST_LINK_HASH` and `EXPECTED_ORIGINAL_URL` inside tests.js. Simply shorten a URL with your server and use those values to set the variables in tests.js properly.
-After that you can run the tests like this (make sure your server is running!):
+You can run the tests simply with:
 
-    sudo npm install -g nodeunit
-    nodeunit tests.js
-
+    npm test
 
 ### To test live server mode (compile + minify CSS/JS)
 
 
 Rebuild assets and launch a live server:
 
-    grunt
-    NODE_ENV=live node app.js
+    npm run start.live
 
 
 ## To deploy to live using Heroku:

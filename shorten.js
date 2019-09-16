@@ -1,15 +1,10 @@
 /* Kish.cm Node.js powered URL Shortener */
 var app = false;
+let log = {info: console.log, error: console.error};
 var Shorten = function(parentapp){
     this.app = parentapp;
     app = parentapp;
-    var settings = require('./settings').shorten_settings;
-    if (this.app === undefined){ //for tests
-        //Assume a dev server
-        this.domain = settings.dev_domain;
-    }else{
-        this.domain = this.app.settings.domain;
-    }
+    log = app.get('bunyan');
 };
 
 
@@ -29,27 +24,25 @@ Shorten.prototype.linkHashLookUp = function(linkHash, userInfo, callback){
     //console.log("Looking up linkhash: " + linkHash);
     var mongoose = app.get('mongoose');
     var dbCursor = mongoose.model('LinkMaps');
-    dbCursor.find({"linkHash": linkHash}, function(err, results){
+    dbCursor.find({linkHash}, function(err, results){
         if (err === null){
-            if (typeof(callback) === "function"){
+            if (typeof (callback) === "function"){
                 if (results.length === 0){
                     callback(false);
                     return false;
-                }else{
-                    callback(results[0]);
-                    //Log the data back if we have it
-                    if (results[0].linkStats.length > 0){
-                        results[0].linkStats.push(userInfo);
-                    }else{
-                        results[0].linkStats = new Array(userInfo);
-                    }
-                    results[0].save();
-                    return results[0];
                 }
+                //Log the data back if we have it
+                if (results[0].linkStats.length > 0){
+                    results[0].linkStats.push(userInfo);
+                }else{
+                    results[0].linkStats = new Array(userInfo);
+                }
+                results[0].save();
+                return callback(results[0]);
             }
         }else{
-            console.log("Some DB error:");
-            console.log(err);
+            log.info("Some DB error:");
+            log.error(err);
             callback(false);
             return false;
         }
@@ -66,18 +59,18 @@ Shorten.prototype.addNewShortenLink = function(originalURL, callback){
     var that = this; //Grab this context for after we make a DB query
     var mongoose = app.get('mongoose');
 
-    var newHash = that.genHash(function(newHash){
+    that.genHash(function(newHash){
         var dbCursor = mongoose.model('LinkMaps');
-        dbCursor = new dbCursor({linkDestination: originalURL, linkHash: newHash, timestamp: new Date() });
+        dbCursor = new dbCursor({linkDestination: originalURL, linkHash: newHash, timestamp: new Date()});
         dbCursor.save(function(err){
             if (err === null){
-                if (typeof(callback) === "function"){
+                if (typeof (callback) === "function"){
                     //Get and return our newly created short URL
                     that.originalURLLookUp(originalURL, callback);
                     return true;
                 }
             }else{
-                console.log(err);
+                log.error(err);
                 return false;
             }
         });
@@ -103,17 +96,15 @@ Shorten.prototype.originalURLLookUp = function (originalURL, callback){
     var dbCursor = mongoose.model('LinkMaps');
     dbCursor.find({"linkDestination": originalURL}, function(err, results){
         if (err === null){
-            if (typeof(callback) === "function"){
-                if (results[0] !== undefined){
+            if (typeof (callback) === "function"){
+                if (results[0]){
                     callback(results[0]);
                     return results[0];
-                }else{
-                    callback(false);
-                    return false;
                 }
+                return callback(false);
             }
         }else{
-            console.log(err);
+            log.error(err);
         }
     });
 };
@@ -129,17 +120,17 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
     var that = this; //We need this context deep in callback hell. I feel like I'm doing something wrong...
     var alreadyShortTest = new RegExp("^http:\/\/" + this.app.settings.domain + "\/[a-zA-Z0-9]{6,32}$");
     if (alreadyShortTest.test(shortenedURL)){
-        var shortenedURLStats = {  'originalURL': null,
-                                   'linkHash': shortenedURL,
-                                   'timesUsed': null,
-                                   'lastUse': null,
-                                   'dateShortened': null,
-                                   'topReferrals': [],
-                                   'topUserAgents': [],
-                                   'error' : 'Not a ' + this.app.settings.domain + ' shortened URL'
-                               };
-                               callback(shortenedURLStats);
-                               return shortenedURLStats;
+        var shortenedURLStats = {
+            'originalURL': null,
+            'linkHash': shortenedURL,
+            'timesUsed': null,
+            'lastUse': null,
+            'dateShortened': null,
+            'topReferrals': [],
+            'topUserAgents': [],
+            'error' : 'Not a ' + this.app.settings.domain + ' shortened URL'
+        };
+        return callback(shortenedURLStats);
     }
     // Strip domain and slashes
     shortenedURL = shortenedURL.replace("http://" + this.app.settings.domain + "/", "");
@@ -148,43 +139,37 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
     var dbCursor = mongoose.model('LinkMaps');
     // We need the link_id, look up the shortened URL first. This is an artifact of being ported over from an ancient PHP app. Will be revised when moving databases
     dbCursor.find({"linkHash": shortenedURL}, function(err, results){
-        if (err === null){
-            if (typeof(callback) === "function"){
-                if (results[0] !== undefined){
-                    shortenedURL = results[0];
-                    if (shortenedURL.linkStats.length > 0){
-                        that.convertResultsToStats(shortenedURL.linkStats, shortenedURL, callback);
-                        return shortenedURL.linkStats;
-                    }else{
-                        var shortenedURLStats = {  'originalURL': shortenedURL.linkDestination,
-                           'linkHash': shortenedURL.linkHash,
-                           'timesUsed': 0,
-                           'lastUse': null,
-                           'dateShortened': null,
-                           'topReferrals': [],
-                           'topUserAgents': [],
-                           'error' : 'Shortened URL hasn\'t been used yet'
-                       };
-                       callback(shortenedURLStats);
-                       return shortenedURLStats;
-                    }
-                }else{
-                    var shortenedURLStats = {  'originalURL': null,
-                                               'linkHash': shortenedURL,
-                                               'timesUsed': null,
-                                               'lastUse': null,
-                                               'dateShortened': null,
-                                               'topReferrals': [],
-                                               'topUserAgents': [],
-                                               'error' : 'No shortened URL found with this hash'
-                                           };
-                                           callback(shortenedURLStats);
-                                           return shortenedURLStats;
-                }
-            }
-        }else{
-            console.log(err);
+        if (err){
+            log.error(err);
         }
+        if (results[0]){
+            shortenedURL = results[0];
+            if (shortenedURL.linkStats.length > 0){
+                that.convertResultsToStats(shortenedURL.linkStats, shortenedURL, callback);
+                return shortenedURL.linkStats;
+            }
+            var shortenURLStats = {
+                'originalURL': shortenedURL.linkDestination,
+                'linkHash': shortenedURL.linkHash,
+                'timesUsed': 0,
+                'lastUse': null,
+                'dateShortened': null,
+                'topReferrals': [],
+                'topUserAgents': [],
+                'error' : 'Shortened URL hasn\'t been used yet'
+            };
+            return callback(shortenURLStats);
+        }
+        return callback({
+            'originalURL': null,
+            'linkHash': shortenedURL,
+            'timesUsed': null,
+            'lastUse': null,
+            'dateShortened': null,
+            'topReferrals': [],
+            'topUserAgents': [],
+            'error' : 'No shortened URL found with this hash'
+        });
     });
 };
 
@@ -212,15 +197,16 @@ Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
 */
 Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, callback){
     // Setup the object to fill in and return
-    var shortenedURLStats = {  'originalURL': shortenedURL.linkDestination,
-                               'linkHash': shortenedURL.linkHash,
-                               'timesUsed': resultSet.length,
-                               'lastUse': resultSet[0].timestamp,
-                               'dateShortened': shortenedURL.timestamp,
-                               'topReferrals': [],
-                               'topUserAgents': [],
-                               'error' : false
-                           };
+    var shortenedURLStats = {
+        'originalURL': shortenedURL.linkDestination,
+        'linkHash': shortenedURL.linkHash,
+        'timesUsed': resultSet.length,
+        'lastUse': resultSet[0].timestamp,
+        'dateShortened': shortenedURL.timestamp,
+        'topReferrals': [],
+        'topUserAgents': [],
+        'error' : false
+    };
 
     // Get the top 10 useragents and referrers
     var knownAgents = [], knownReferrals = [];
@@ -228,7 +214,7 @@ Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, call
         // Check known agents for this result
         var found = false;
         for (var a = 0; knownAgents.length > a; a++){
-            if (knownAgents[a].userAgent == resultSet[i].userAgent){
+            if (knownAgents[a].userAgent === resultSet[i].userAgent){
                 knownAgents[a].agentCount++;
                 found = true;
             }
@@ -240,7 +226,7 @@ Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, call
 
         // Check known referrers for this result
         for (var b = 0; knownReferrals.length > b; b++){
-            if (knownReferrals[b].referrer == resultSet[i].referrer){
+            if (knownReferrals[b].referrer === resultSet[i].referrer){
                 knownReferrals[b].referrerCount++;
                 found = true;
             }
@@ -249,18 +235,18 @@ Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, call
             knownReferrals.push({'referrer': resultSet[i].referrer, 'referrerCount': 1});
         }
     }
-    function compareReferrer(a, b) {
-        if (a.referrerCount > b.referrerCount) { return -1; }
-        if (a.referrerCount < b.referrerCount) { return 1; }
+    function compareReferrer(aa, bb) {
+        if (aa.referrerCount > bb.referrerCount) { return -1; }
+        if (aa.referrerCount < bb.referrerCount) { return 1; }
         return 0;
     }
-    function compareAgent(a, b) {
-        if (a.agentCount > b.agentCount) { return -1; }
-        if (a.agentCount < b.agentCount) { return 1; }
+    function compareAgent(aa, bb) {
+        if (aa.agentCount > bb.agentCount) { return -1; }
+        if (aa.agentCount < bb.agentCount) { return 1; }
         return 0;
     }
-    shortenedURLStats.topReferrals = knownReferrals.sort(compareReferrer).slice(0,9);
-    shortenedURLStats.topUserAgents = knownAgents.sort(compareAgent).slice(0,9);
+    shortenedURLStats.topReferrals = knownReferrals.sort(compareReferrer).slice(0, 9);
+    shortenedURLStats.topUserAgents = knownAgents.sort(compareAgent).slice(0, 9);
 
     callback(shortenedURLStats);
     return shortenedURLStats;
@@ -272,7 +258,6 @@ Shorten.prototype.convertResultsToStats = function(resultSet, shortenedURL, call
 *   Returns: A 6 character alpha-numeric string that can be used as a link hash
 */
 Shorten.prototype.genHash = function(callback){
-
     // Simple random number generator helper
     var randomRange = function(min, max){
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -280,16 +265,11 @@ Shorten.prototype.genHash = function(callback){
     var newHash = "";
     // 6 digits, alphanumeric
     for (var i = 0; i < 6; i++){
-        var digit;
-        if (randomRange(0,1) === 0){
-           digit = String(randomRange(0,9));
-        }else{
-           digit = String.fromCharCode(randomRange(97,122));
-        }
-        newHash = newHash + digit;
+        var digit = (randomRange(0, 1) === 0) ? String(randomRange(0, 9)) : String.fromCharCode(randomRange(97, 122));
+        newHash += digit;
     }
 
-    if (this.app !== undefined){ // Tests don't need to check the database - TODO add a new node_env variable/state: test
+    if (this.app){ // Tests don't need to check the database
         var mongoose = app.get('mongoose');
         var dbCursor = mongoose.model('LinkMaps');
         dbCursor.find({"linkHash": newHash}, function(err, results){
@@ -300,10 +280,8 @@ Shorten.prototype.genHash = function(callback){
                 if (results.length > 0){
                     // Statistically, this will likely never be called ever
                     this.genHash();
-                }else{
-                    callback(newHash);
-                    return newHash;
                 }
+                return callback(newHash);
             }
         });
     }else{
@@ -312,7 +290,7 @@ Shorten.prototype.genHash = function(callback){
     }
 };
 
-/**
+/*
 * Tests to ensure the a given linkHash is ONLY alphanumeric and between 6-32 characters
 *   Accepts: A string to test
 *   Returns: Boolean `True` if linkHash is ONLY alphanumeric and between 6-32 characters
@@ -337,9 +315,8 @@ Shorten.prototype.isURL = function(testURL) {
         //Make sure URL mostly looks like a URL should
         var mainURLTest = /^(https?):\/\/((?:[a-z0-9.-]|%[0-9A-F]{2}){3,})(?::(\d+))?((?:\/(?:[a-z0-9-._~!$&'()*+,;=:@]|%[0-9A-F]{2})*)*)(?:\?((?:[a-z0-9-._~!$&'()*+,;=:\/?@]|%[0-9A-F]{2})*))?(?:#((?:[a-z0-9-._~!$&'()*+,;=:\/?@]|%[0-9A-F]{2})*))?$/i;
         return mainURLTest.test(testURL);
-    }else{
-        return false;
     }
+    return false;
 };
 
 module.exports = Shorten;

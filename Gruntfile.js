@@ -13,7 +13,7 @@ module.exports = function(grunt) {
             },
             allJavascripts: {
                 src: [
-                    'public/media/js/zeroclipboard/ZeroClipboard.js',
+                    'node_modules/clipboard/dist/clipboard.js',
                     'public/media/js/jquery-1.11.1.js',
                     'public/media/js/ender.overlay.js',
                     'public/media/js/shorten.js'

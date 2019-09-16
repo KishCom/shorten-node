@@ -1,5 +1,5 @@
 $(document).ready(function(){
-    var clip = new ZeroClipboard.Client();
+    new ClipboardJS('#liveCopyToClip');
     var domain = $("html").data("domain");
     //Set new short link
     $("#submitBtn").click(function(){
@@ -113,17 +113,6 @@ $(document).ready(function(){
             //Invalid url
             $("#statsError").html("Not a " + domain + " URL");
         }
-    });
-
-    $("#liveCopyToClip").on("click", function(){
-        clip.setText($("#liveSelect").val());
-        clip.glue("liveCopyToClip");
-        $("#liveCopyToClip").html("Once more");
-        clip.addEventListener('complete', function() {
-
-            $("#liveCopyToClip").html("Copied");
-            setTimeout("$('#liveCopyToClip').html('Click To Copy');", 2000);
-        });
     });
 
     $("#liveSelect").on("click", function(){

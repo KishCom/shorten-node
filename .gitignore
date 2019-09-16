@@ -1,2 +1,7 @@
 node_modules
 npm-debug.log
+public/media/js/shorten_concat.js
+public/media/shorten.min.js
+public/media/css/style.css
+public/media/shorten.min.css
+settings.js
