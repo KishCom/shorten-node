@@ -4,9 +4,9 @@
 
 Shorten-node - A URL Shortener web app written in Node.js, with a MongoDB backend.
 
-The app that powers my URL shortener "kish.cm" has come to represent a kind of "Hello world" for learning new languages and frameworks. This is my node.js powered version and is the version running on http://kish.cm that has been up and serving links and stats for over 2 years now.
+This URL shortener app has been running for over 6 years. A testament to how far Node.js has come.
 
-When I started this project I didn't know much about MongoDB, however over the course of a few years it's easy to see how I would have done things differently. However, it's not broken yet so I'm not going to rewrite things -- it works well on the scale I use it.
+When I started this project I didn't know much about MongoDB, however over the course of a few years it's easy to see how I would have done things differently (eg: probably used PostgresQL instead 😏). However, it's not broken yet so I'm not going to rewrite things -- it works well on the scale I use it.
 
 What makes JavaScript development so awesome these days is the massive amount of awesome free things out there. This web app wouldn't be possible without making use of SO MUCH awesome stuff like:
 
