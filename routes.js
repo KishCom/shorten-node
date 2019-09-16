@@ -86,18 +86,12 @@ Routes.prototype.setLink = function (req, res){
     if (!shortenURL){
         return res.status(400).json({"error": "Missing shortenedURL"});
     }
-    //Make sure prefix is good
-    var httpSearch = shortenURL.search(/^(ftp|http|https):\/\//);
-    if (httpSearch === -1){
-        //Didn't find a prefix? Assume https://
-        shortenURL = "https://"+shortenURL;
-    }
 
     //This is the URL we're shortening
     shortened.originalURL = shortenURL;
 
     //Make sure link mostly looks like a URL
-    if (shorten.isURL(shortenURL) === false){
+    if (shorten.isURL(shortenURL, {"require_protocol": true}) === false){
         //Throw an error - not a real or supported URI
         log.debug(`Invalid or unsupported URI: ${shortenURL}`);
         shortened.shortenError = "Invalid or unsupported URI";

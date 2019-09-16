@@ -1,6 +1,6 @@
 exports.shorten_settings = {
     dev_domain: 'localhost:8888', // Your development domain
-    live_domain: 'https://supertestshorten.herokuapp.com/', // Live domain
+    live_domain: 'https://supertestshorten.herokuapp.com',
     dev_mongodb_uri: 'mongodb://localhost/shorten-node-dev',
     test_mongodb_uri: 'mongodb://localhost/shorten-node-test',
     live_mongodb_uri: '', // Leave blank to automatically pickup MONGOLAB_URI
