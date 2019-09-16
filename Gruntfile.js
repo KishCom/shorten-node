@@ -76,5 +76,5 @@ module.exports = function(grunt) {
         grunt.task.run('git-describe');
     });
     grunt.registerTask('default', ['getGitRevision', 'concat', 'uglify', 'less']);
-    grunt.registerTask('test', ['jshint']); // lol, tests coming soon
+    grunt.registerTask('live', ['concat', 'uglify', 'less']);
 };
