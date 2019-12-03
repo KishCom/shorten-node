@@ -23,7 +23,7 @@
     "express-session": "1.17.x",
     "less": "3.10.x",
     "less-middleware": "3.1.x",
-    "mongoose": "5.7.x",
+    "mongoose": ">=5.7.5",
     "multer": "1.4.x",
     "nunjucks": "^3.2.0",
     "sanitize-caja": "0.1.x",
