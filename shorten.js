@@ -118,7 +118,7 @@ Shorten.prototype.originalURLLookUp = function (originalURL, callback){
 */
 Shorten.prototype.shortenedURLStats = function(shortenedURL, callback) {
     var that = this; //We need this context deep in callback hell. I feel like I'm doing something wrong...
-    var alreadyShortTest = new RegExp("^http:\/\/" + this.app.settings.domain + "\/[a-zA-Z0-9]{6,32}$");
+    var alreadyShortTest = new RegExp("^http://" + this.app.settings.domain + "/[a-zA-Z0-9]{6,32}$");
     if (alreadyShortTest.test(shortenedURL)){
         var shortenedURLStats = {
             'originalURL': null,
@@ -310,7 +310,7 @@ Shorten.prototype.isValidLinkHash = function(linkHash){
 */
 Shorten.prototype.isURL = function(testURL) {
     //Make sure the URL isn't already a URL we've shortened
-    var alreadyKishcmTest = new RegExp("^http:\/\/" + this.domain + "\/[a-zA-Z0-9]+$");
+    var alreadyKishcmTest = new RegExp("^http://" + this.domain + "/[a-zA-Z0-9]+$");
     if (alreadyKishcmTest.test(testURL) === false){
         //Make sure URL mostly looks like a URL should
         var mainURLTest = /^(https?):\/\/((?:[a-z0-9.-]|%[0-9A-F]{2}){3,})(?::(\d+))?((?:\/(?:[a-z0-9-._~!$&'()*+,;=:@]|%[0-9A-F]{2})*)*)(?:\?((?:[a-z0-9-._~!$&'()*+,;=:\/?@]|%[0-9A-F]{2})*))?(?:#((?:[a-z0-9-._~!$&'()*+,;=:\/?@]|%[0-9A-F]{2})*))?$/i;

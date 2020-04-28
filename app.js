@@ -1,6 +1,6 @@
 /*
 *   shorten-node - A URL Shortening web app
-*    Andrew Kish, 2014 - 2019
+*    Andrew Kish, 2014 - 2020
 */
 
 var express = require('express'),
