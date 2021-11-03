@@ -27,7 +27,7 @@
     "multer": "1.4.x",
     "nunjucks": "^3.2.1",
     "sanitize-caja": "0.1.x",
-    "validator": "13.0.x"
+    "validator": "13.7.x"
   },
   "devDependencies": {
     "async": "latest",
