@@ -43,7 +43,7 @@
     "grunt-contrib-uglify": "~4.0.x",
     "grunt-contrib-watch": "~1.1.x",
     "grunt-git-describe": "~2.4.x",
-    "mocha": "^7.2.0",
+    "mocha": "^10.2.0",
     "nodemon": "^2.0.4",
     "request": "latest",
     "supertest": "^4.0.2"
